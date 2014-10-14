@@ -43,4 +43,24 @@ void ltransaction_clear(ltransaction *trs);
  */
 void ltransaction_push(ltransaction *trs, void *res, destructor_t cbk);
 
+/**
+ * Function: ltransaction_aborted 
+ * Check if this transaction is aborted
+ *
+ * Parameters:
+ *   trs - The transaction
+ *   location - To to full by a macro that write here the current
+ *      function name and the file/line of the source code
+ */
+lbool ltransaction_aborted_internal(ltransaction *trs, const char *location);
+
+#ifdef _MSC_VER
+#define ltransaction_aborted( trs ) \
+  ltransaction_aborted( trs, __FUNCTION__, "Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
+#else
+#define ltransaction_aborted( trs ) \
+  ltransaction_aborted( trs, __func__, "Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
 #endif
+
+#endif
+
