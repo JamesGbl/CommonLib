@@ -56,10 +56,10 @@ lbool ltransaction_aborted_internal(ltransaction *trs, const char *location);
 
 #ifdef _MSC_VER
 #define ltransaction_aborted( trs ) \
-  ltransaction_aborted( trs, __FUNCTION__, "Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
+  ltransaction_aborted( trs, "[" __FUNCTION__ "] Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
 #else
 #define ltransaction_aborted( trs ) \
-  ltransaction_aborted( trs, __func__, "Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
+  ltransaction_aborted( trs, "[" __func__ "] Called from: " __FILE__ " at " stringize_op( __LINE__ ) )
 #endif
 
 #endif
