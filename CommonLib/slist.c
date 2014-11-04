@@ -30,6 +30,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "slist.h"
 #include "lvector.h"
 #include "lstring.h"
+#include "lmemory.h"
 #include <stdlib.h>
 
 struct slist {
@@ -40,7 +41,7 @@ slist* slist_new( int initialSize ) {
     int i;
     slist* self;
     
-    self = malloc( sizeof(slist) );
+    self = lmalloc( sizeof(slist) );
     self->vect = lvector_new( initialSize );
 
     for ( i=0; i<initialSize; i++ ) {
@@ -59,7 +60,7 @@ void slist_destroy( slist* self ) {
         lstring_delete( lvector_at( self->vect, i ) );
     }
     lvector_delete( self->vect );
-    free( self );
+    lfree( self );
 }
 
 int slist_len( slist* self ) {

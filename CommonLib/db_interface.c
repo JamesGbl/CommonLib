@@ -29,6 +29,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "db_interface.h"
 #include "lstring.h"
 #include "lcross.h"
+#include "lmemory.h"
 #include <stdlib.h>
 
 /* DbIterator
@@ -42,7 +43,7 @@ void DbIterator_init( DbIterator *self, DbIterator_class *oClass ) {
 void DbIterator_destroy( DbIterator *self ) {
     if ( !self ) return; 
     self->oClass->destroy( self );
-    free( self );
+    lfree( self );
 }
 
 int DbIterator_dammi_numero_campi( DbIterator *self ) {
@@ -87,7 +88,7 @@ void DbPrepared_destroy( DbPrepared *self ) {
     lstring_delete( self->buffer );
     lstring_delete( self->lastError );
 
-    free( self );
+    lfree( self );
 }
 
 const char * DbPrepared_sql_into( DbPrepared *self, lerror **error ) {
@@ -158,7 +159,7 @@ void DbConnection_destroy( DbConnection *self ) {
     self->oClass->destroy( self );
     lstring_delete( self->lastError );
     lstring_delete( self->buffer );
-    free( self );
+    lfree( self );
 }
 
 lbool DbConnection_sql_exec( DbConnection *self, const char *sql, lerror **error ) {

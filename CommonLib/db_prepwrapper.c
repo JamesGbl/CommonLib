@@ -29,6 +29,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "db_prepwrapper.h"
 #include "lstring.h"
 #include "lvector.h"
+#include "lmemory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -158,7 +159,7 @@ DbPrepared *PrepWrapper_For( DbConnection* dc, const char *sql ) {
     oClass.sql_exec = PrepWrapper_sql_exec;
     oClass.sql_retrieve = PrepWrapper_sql_retrieve;
 
-    self = malloc( sizeof(struct PrepWrapper) );
+    self = lmalloc( sizeof(struct PrepWrapper) );
     DbPrepared_init( (DbPrepared*)self, &oClass );
 
     self->origDc = dc;

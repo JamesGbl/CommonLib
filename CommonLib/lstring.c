@@ -28,6 +28,7 @@ For more information, please refer to <http://unlicense.org/>
 */ 
 #include "lstring.h"
 #include "lcross.h"
+#include "lmemory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +48,7 @@ static void lstring_finalize( lstring* str )
 
     if( str->buf!=NULL ) 
     {
-        free(str->buf);
+        lfree(str->buf);
     }
     lstring_initialize( str );
 }
@@ -57,7 +58,7 @@ static void lstring_finalize( lstring* str )
 */
 lstring* lstring_new( void )
 {
-    lstring* str = (lstring *)malloc(sizeof(struct lstring));
+    lstring* str = (lstring *)lmalloc(sizeof(struct lstring));
     lstring_initialize(str);
     return str;
 }
@@ -79,11 +80,11 @@ lstring* lstring_new_from_cstr( const char *cstr )
 */
 lstring* lstring_new_from_lstr( lstring* self )
 {
-    lstring* str = (lstring *)malloc(sizeof(struct lstring));
+    lstring* str = (lstring *)lmalloc(sizeof(struct lstring));
     str->bufLen = self->bufLen;
     str->len = self->len;
 
-    str->buf = (char *)malloc(self->bufLen);
+    str->buf = (char *)lmalloc(self->bufLen);
     memcpy( str->buf, self->buf, self->len+1 );
     
     return str;
@@ -124,7 +125,7 @@ void lstring_delete( lstring* str )
     if ( str==NULL ) return;
 
     lstring_finalize(str);
-    free(str);
+    lfree(str);
 }    
 
 void lstring_append_generic( lstring* str, const char *other, int otherLen)
@@ -139,10 +140,10 @@ void lstring_append_generic( lstring* str, const char *other, int otherLen)
 
     if( str->buf==NULL )
     {
-        str->buf = malloc( newBufLen );
+        str->buf = lmalloc( newBufLen );
     } else if( str->bufLen<newBufLen )
     {
-        str->buf = realloc(str->buf, newBufLen);
+        str->buf = lrealloc(str->buf, newBufLen);
     }    
 
     memcpy( str->buf+str->len, other, otherLen );
@@ -208,7 +209,7 @@ void lstring_reserve( lstring* str, int len )
     l_assert( str!=NULL );
     if( str->bufLen<len )
     {
-        str->buf = realloc( str->buf, sizeof(char)*len );
+        str->buf = lrealloc( str->buf, sizeof(char)*len );
         str->bufLen = len;
     }
 }    

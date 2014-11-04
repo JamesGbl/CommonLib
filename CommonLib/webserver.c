@@ -31,6 +31,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "webserver.h"
 #include "lstring.h"
 #include "lcross.h"
+#include "lmemory.h"
 #include "buffer.h"
 #include <stdlib.h>
 #include <string.h>
@@ -75,7 +76,7 @@ struct webrequest_t *webreq_new( struct mg_connection *conn ) {
 
     l_assert( conn!=NULL );
     
-    result = (struct webrequest_t *)malloc(sizeof(struct webrequest_t));
+    result = (struct webrequest_t *)lmalloc(sizeof(struct webrequest_t));
     result->conn = conn;
     result->info = mg_get_request_info( conn );
 
@@ -84,7 +85,7 @@ struct webrequest_t *webreq_new( struct mg_connection *conn ) {
 
 void webreq_destroy( struct webrequest_t *self ) {
     if ( self!=NULL ) {
-        free( self );
+        lfree( self );
     }
 }
 
@@ -125,7 +126,7 @@ struct webresponse_t *webresp_new( struct mg_connection *conn ) {
 
     l_assert( conn!=NULL );
     
-    result = (struct webresponse_t *)malloc(sizeof(struct webresponse_t));
+    result = (struct webresponse_t *)lmalloc(sizeof(struct webresponse_t));
     result->conn = conn;
     result->http_status = 200;
     result->http_status_desc = lstring_new_from_cstr( "OK" );
@@ -140,7 +141,7 @@ void webresp_destroy( struct webresponse_t *self ) {
         lstring_delete( self->http_status_desc );
         lstring_delete( self->content_type );
         MemBuffer_destroy( self->buffer );
-        free( self );
+        lfree( self );
     }
 }
 
@@ -204,7 +205,7 @@ static void webresp_commit( struct webresponse_t *conn )
 /* Web server and framework {{{ */
 
 struct webserver_t *webserver_new( const char *address, const char *port, int n_threads, const char *docRoot ) {
-    struct webserver_t *result = (struct webserver_t *)malloc(sizeof(struct webserver_t) );
+    struct webserver_t *result = (struct webserver_t *)lmalloc(sizeof(struct webserver_t) );
 
     l_assert( address!=NULL );
     l_assert( port!=NULL );
@@ -300,7 +301,7 @@ void webserver_destroy( struct webserver_t *self ) {
     lstring_delete( self->addr );
     lstring_delete( self->docRoot );
     lstring_delete( self->port );
-    free( self );
+    lfree( self );
 }
 
 void webserver_add_service( struct webserver_t *self, const char *uri, webservice_handler_t handler, void *ctx ) {

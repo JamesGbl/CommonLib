@@ -28,6 +28,7 @@ For more information, please refer to <http://unlicense.org/>
 */ 
 #include "buffer.h"
 #include "lcross.h"
+#include "lmemory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,9 +40,9 @@ struct MemBuffer {
 };
 
 MemBuffer* MemBuffer_new( int reservedSpace ) {
-    MemBuffer *self = (MemBuffer *) malloc(sizeof(MemBuffer));
+    MemBuffer *self = (MemBuffer *) lmalloc(sizeof(MemBuffer));
 
-    self->buf = malloc( reservedSpace );
+    self->buf = lmalloc( reservedSpace );
     self->space = reservedSpace;
     self->len = 0;
 
@@ -66,7 +67,7 @@ void MemBuffer_write( MemBuffer* self, void *addr, size_t size ) {
     postLen = self->len + size;
     if ( postLen > self->space ) {
         self->space = 2<<l_log2(postLen + 128);
-        self->buf = realloc( self->buf, self->space );
+        self->buf = lrealloc( self->buf, self->space );
     } 
 
     memcpy( self->buf + self->len, addr, size );
@@ -79,7 +80,7 @@ void MemBuffer_write_char( MemBuffer* self, char c ) {
     postLen = self->len + 1;
     if ( postLen > self->space ) {
         self->space = 2<<l_log2(postLen + 128);
-        self->buf = realloc( self->buf, self->space );
+        self->buf = lrealloc( self->buf, self->space );
     } 
 
     self->buf[self->len] = c;
@@ -99,8 +100,8 @@ void MemBuffer_destroy( MemBuffer* self ) {
         return;
     }
 
-    free( self->buf );
-    free( self );
+    lfree( self->buf );
+    lfree( self );
 }
 
 MemBuffer* MemBuffer_new_fromfile( const char *fileName ) {

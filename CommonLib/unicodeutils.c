@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "unicodeutils.h"
 #include "lcross.h"
+#include "lmemory.h"
 
 /*
 Author: Leonardo Cecchi <leonardoce@interfree.it>
@@ -47,7 +48,7 @@ WCHAR* string1252ToWChar(const char *orig) {
 	}
 
 	requiredBufferSize=MultiByteToWideChar(1252, 0, orig, strlen(orig)+1, NULL, 0);
-	spazioConversione=(WCHAR *)malloc(sizeof(WCHAR)*requiredBufferSize);
+	spazioConversione=(WCHAR *)lmalloc(sizeof(WCHAR)*requiredBufferSize);
 
 	if(spazioConversione!=NULL) {
 		/* Conversione dal codepage 1252 a multibyte */
@@ -71,7 +72,7 @@ char* stringWCharToUtf8(const WCHAR* orig) {
 	}
 
 	requiredBufferSize=WideCharToMultiByte(CP_UTF8, 0, orig, -1, NULL, 0, NULL, NULL);
-	spazioConversione=(char *)malloc(requiredBufferSize);
+	spazioConversione=(char *)lmalloc(requiredBufferSize);
 	
 	if(spazioConversione!=NULL) {
 		WideCharToMultiByte(CP_UTF8, 0, orig, -1, spazioConversione, requiredBufferSize, NULL, NULL);
@@ -94,7 +95,7 @@ WCHAR* stringUtf8ToWChar(const char *orig) {
 	}
 
 	requiredBufferSize=MultiByteToWideChar(CP_UTF8, 0, orig, strlen(orig)+1, NULL, 0);
-	spazioConversione=(WCHAR *)malloc(sizeof(WCHAR)*requiredBufferSize);
+	spazioConversione=(WCHAR *)lmalloc(sizeof(WCHAR)*requiredBufferSize);
 
 	if(spazioConversione==NULL) {
 		return NULL;
@@ -117,7 +118,7 @@ char* stringWCharTo1252(const WCHAR* orig) {
 	}
 	
 	requiredBufferSize=WideCharToMultiByte(1252, 0, orig, -1, NULL, 0, NULL, NULL);
-	spazioConversione=(char *)malloc(requiredBufferSize);
+	spazioConversione=(char *)lmalloc(requiredBufferSize);
 
 	if(spazioConversione==NULL) {
 		return NULL;
@@ -146,7 +147,7 @@ char *string1252ToUtf8(const char *orig) {
 	}
 
 	utf8String=stringWCharToUtf8(multiByte);
-	free(multiByte);
+	lfree(multiByte);
 	if(utf8String==NULL) {
 		return NULL;
 	}
@@ -174,7 +175,7 @@ char *stringUtf8To1252(const char *orig) {
 	}
 
 	cpString=stringWCharTo1252(wString);
-	free(wString);
+	lfree(wString);
 
 	if(cpString==NULL) {
 		return NULL;

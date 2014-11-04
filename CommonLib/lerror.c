@@ -1,5 +1,6 @@
 #include "lerror.h"
 #include "lcross.h"
+#include "lmemory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,7 +42,7 @@ void lerror_set_internal( lerror **err, const char *domain, const char *message 
     l_assert( message!=NULL );
     l_assert( *err == NULL );
 
-    *err = malloc( sizeof( struct lerror ) );
+    *err = lmalloc( sizeof( struct lerror ) );
     (*err)->message = strdup( message );
     (*err)->stacktrace = lstring_new();
 
@@ -56,10 +57,10 @@ void lerror_delete( lerror **err ) {
     if ( err==NULL ) return;
     if ( *err==NULL ) return;
 
-    free( (*err)->message );
-    free( (*err)->domain );
+    lfree( (*err)->message );
+    lfree( (*err)->domain );
     lstring_delete( (*err)->stacktrace );
-    free( *err );
+    lfree( *err );
     *err = NULL;
 }
 
@@ -80,8 +81,12 @@ void lerror_set_sprintf_internal( lerror **err, const char *domain, const char *
 
 void lerror_add_prefix_internal( lerror **err, const char *prefix ) {
     char *buffer;
+	
+	if ( err==NULL) {
+		/* no one is interested for the error message so...  */
+		return;
+	}
 
-    l_assert( err!=NULL );
     l_assert( *err!=NULL );
 
     buffer = calloc( 1, strlen(prefix) + strlen((*err)->message) + 16 );
@@ -89,7 +94,7 @@ void lerror_add_prefix_internal( lerror **err, const char *prefix ) {
     strcat( buffer, " - " );
     strcat( buffer, (*err)->message );
 
-    free( (*err)->message );
+    lfree( (*err)->message );
     (*err)->message = buffer;
 }
 
@@ -103,7 +108,7 @@ lbool lerror_propagate_internal( lerror **destination, lerror *source, const cha
         lerror_add_stack_internal( &source, domain, location );
         
         if ( destination==NULL ) {
-            free( source );
+            lfree( source );
         } else {
             *destination = source;
         }

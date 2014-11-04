@@ -32,14 +32,15 @@ For more information, please refer to <http://unlicense.org/>
 #include <stdio.h>
 #include "lvector.h"
 #include "lcross.h"
+#include "lmemory.h"
 
 /*
 ** Inizializza un nuovo vettore con la dimensione predefinita passata
 */
 lvector* lvector_new(int size)
 {
-	lvector *self = (lvector *)malloc(sizeof(lvector));
-	self->buffer = malloc( sizeof(void*) * size );
+	lvector *self = (lvector *)lmalloc(sizeof(lvector));
+	self->buffer = lmalloc( sizeof(void*) * size );
 	self->size = size;
 	return self;
 }
@@ -68,7 +69,7 @@ void lvector_resize(lvector* self, int newSize)
 {
 	if( self->size < newSize )
 	{
-		self->buffer = realloc(self->buffer, sizeof(void *)*newSize);
+		self->buffer = lrealloc(self->buffer, sizeof(void *)*newSize);
 	} 
 
 	self->size = newSize;
@@ -89,8 +90,8 @@ void lvector_set(lvector *self, int idx, void *element)
 void lvector_delete(lvector *self)
 {
     if ( self==NULL ) return;
-	free(self->buffer);
-	free(self);
+	lfree(self->buffer);
+	lfree(self);
 }
 
 /*

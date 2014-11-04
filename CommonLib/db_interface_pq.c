@@ -1,3 +1,4 @@
+#ifndef WIN32
 /*
 Author: Leonardo Cecchi <leonardoce@interfree.it>
 
@@ -99,7 +100,7 @@ static DbIterator *crea_iteratore_pq_per( PGresult *res, int shared ) {
     static DbIterator_class oClass;
     DbIterator_Pq *self = NULL;
 
-    self = malloc( sizeof( DbIterator_Pq ) );
+    self = lmalloc( sizeof( DbIterator_Pq ) );
     oClass.destroy = DbIteratorPq_destroy;
     oClass.dammi_numero_campi = DbIteratorPq_dammi_numero_campi;
     oClass.dammi_nome_campo = DbIteratorPq_dammi_nome_campo;
@@ -166,7 +167,7 @@ static void DbPreparedPq_destroy( DbPrepared *parent ) {
     lstring_delete( self->prepName );
     lstring_delete( queryDealloc );
     slist_destroy( self->parametri );
-    free( self->flagNulli );
+    lfree( self->flagNulli );
 }
 
 static int DbPreparedPq_dammi_numero_parametri( DbPrepared *parent ) {
@@ -233,7 +234,7 @@ static lbool DbPreparedPq_sql_exec( DbPrepared *parent, lerror **error ) {
     }
 
     PQclear( res );
-    free( valori );
+    lfree( valori );
 
     return result;
 }
@@ -266,7 +267,7 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
 	result = crea_iteratore_pq_per( res, 0 );
     }
 
-    free( valori );
+    lfree( valori );
 
     return result;
 }
@@ -287,7 +288,7 @@ static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *s
     oClass.sql_exec = DbPreparedPq_sql_exec;
     oClass.sql_retrieve = DbPreparedPq_sql_retrieve;
 
-    self = malloc( sizeof(DbPrepared_Pq) );
+    self = lmalloc( sizeof(DbPrepared_Pq) );
     self->conn = conn;
     self->prepName = lstring_new();
     lstring_append_sprintf( self->prepName, "mprep_%d", prepId );
@@ -295,7 +296,7 @@ static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *s
     sqlPq = lstring_new();
     normalizzaParametriPg( sqlPq, sql, &self->quantiParametri );
     self->parametri = slist_new( self->quantiParametri );
-    self->flagNulli = malloc( sizeof(int) * self->quantiParametri );
+    self->flagNulli = lmalloc( sizeof(int) * self->quantiParametri );
 
     res = PQprepare( self->conn, 
 		     lstring_to_cstr( self->prepName ), 
@@ -307,8 +308,8 @@ static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *s
 	lerror_set( error, PQresultErrorMessage(res) );
 	lstring_delete( self->prepName );
 	slist_destroy( self->parametri );
-	free( self->flagNulli );
-	free( self );
+	lfree( self->flagNulli );
+	lfree( self );
 	self = NULL;
     } else {
 	DbPrepared_init( (DbPrepared *)self, &oClass );
@@ -420,10 +421,11 @@ DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
     oClass.sql_retrieve = DbConnectionPq_sql_retrieve;
     oClass.sql_prepare = DbConnectionPq_sql_prepare;
 
-    self = (DbConnection_Pq *)malloc( sizeof(struct DbConnection_Pq) );
+    self = (DbConnection_Pq *)lmalloc( sizeof(struct DbConnection_Pq) );
     self->conn = conn;
     self->lastPrep = 0;
 
     DbConnection_init( (DbConnection *)self, &oClass );
     return (DbConnection *)self;
 }
+#endif

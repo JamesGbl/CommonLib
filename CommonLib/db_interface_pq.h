@@ -1,3 +1,4 @@
+#ifndef WIN32
 /*
 About: License
 
@@ -54,4 +55,5 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 DbConnection *DbConnection_Pq_new( const char *connString, lerror **error );
 
 
+#endif
 #endif

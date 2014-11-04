@@ -31,6 +31,7 @@ For more information, please refer to <http://unlicense.org/>
 #include <stdlib.h>
 #include "lcross.h"
 #include "third-party/sqlite3.h"
+#include "lmemory.h"
 
 DbIterator_class* DbIterator_Sqlite_class();
 DbPrepared_class* DbPrepared_Sqlite_class();
@@ -47,7 +48,7 @@ struct DbIterator_Sqlite {
 typedef struct DbIterator_Sqlite DbIterator_Sqlite;
 
 DbIterator_Sqlite *DbIterator_alloc_sqlite( sqlite3 *pDb, sqlite3_stmt* pStatement, int pShared, lerror **error ) {
-    DbIterator_Sqlite *self = malloc( sizeof(DbIterator_Sqlite) );
+    DbIterator_Sqlite *self = lmalloc( sizeof(DbIterator_Sqlite) );
 
     DbIterator_init( (DbIterator *)self, DbIterator_Sqlite_class() );
     self->db = pDb;
@@ -215,7 +216,7 @@ DbPrepared_class * DbPrepared_Sqlite_class() {
 }
 
 DbPrepared_Sqlite * DbPrepared_Sqlite_alloc( sqlite3 *pDb, const char *sql, sqlite3_stmt *pStatement ) {
-    DbPrepared_Sqlite *self = malloc( sizeof(DbPrepared_Sqlite) );
+    DbPrepared_Sqlite *self = lmalloc( sizeof(DbPrepared_Sqlite) );
     DbPrepared_init( (DbPrepared *)self, DbPrepared_Sqlite_class() );
     self->sql = lstring_new_from_cstr( sql );
     self->db = pDb;
@@ -233,7 +234,7 @@ struct DbConnection_Sqlite {
 typedef struct DbConnection_Sqlite DbConnection_Sqlite;
 
 DbConnection *DbConnection_Sqlite_new( const char *nomeFile ) {
-    DbConnection_Sqlite *self = malloc( sizeof(DbConnection_Sqlite) );
+    DbConnection_Sqlite *self = lmalloc( sizeof(DbConnection_Sqlite) );
     DbConnection_init( (DbConnection *)self, DbConnection_Sqlite_class() );
 
     sqlite3_open( nomeFile, &self->db );
