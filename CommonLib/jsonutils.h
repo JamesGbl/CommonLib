@@ -1,3 +1,6 @@
+#ifndef __JSON_UTILS
+#define __JSON_UTILS
+
 /*
 About: License
 
@@ -28,43 +31,26 @@ For more information, please refer to <http://unlicense.org/>
 
 Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
-#include "lmemory.h"
 
-#ifdef LMEM_USE_COTASK_ALLOCATOR
-// Questo tipo di allocazione di memoria serve per
-// compatibilita' con quella fatta dalla MilleApi, anche se
-// non ha cambiato nulla nel debug che stiamo facendo.
+#include "unicodeutils.h"
 
-// Forse e' il caso di rimettere la malloc normale?
+typedef struct JsonBuffer JsonBuffer;
 
-#include <Windows.h>
+JsonBuffer *    JsonBuffer_new();
+void            JsonBuffer_destroy( JsonBuffer *self );
 
-void *lmalloc(size_t size) {
-	return CoTaskMemAlloc(size);
-}
+void            JsonBuffer_startList( JsonBuffer *self );
+void            JsonBuffer_endList( JsonBuffer *self );
 
-void lfree(void *area) {
-	CoTaskMemFree(area);
-}
+void            JsonBuffer_startObject( JsonBuffer *self );
+void            JsonBuffer_endObject( JsonBuffer *self );
+void            JsonBuffer_writePropertyName( JsonBuffer *self, const char *name );
 
-void *lrealloc(void *area, size_t newSize) {
-	return CoTaskMemRealloc(area, newSize);
-}
+void            JsonBuffer_writeString( JsonBuffer *self, const char *str );
+void            JsonBuffer_writeNull( JsonBuffer *self );
+void            JsonBuffer_writeSeparator( JsonBuffer *self );
 
-#else
-
-#include <stdlib.h>
-
-void *lmalloc(size_t size) {
-	return malloc(size);
-}
-
-void lfree(void *area) {
-	free(area);
-}
-
-void *lrealloc(void *area, size_t newSize) {
-	return realloc(area, newSize);
-}
+int             JsonBuffer_size( JsonBuffer *self );
+const char *    JsonBuffer_get( JsonBuffer *self );
 
 #endif
