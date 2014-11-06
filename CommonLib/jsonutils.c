@@ -34,6 +34,7 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
 #if _MSC_VER
@@ -80,32 +81,52 @@ void JsonBuffer_writePropertyName( JsonBuffer *self, const char *name ) {
 }
 
 void JsonBuffer_writeString( JsonBuffer *self, const char *str ) {
-    wchar_t *wstring = string1252ToWChar( str );
-    size_t lunghezza = wcslen( wstring );
+    wchar_t *wstring;
+    size_t lunghezza;
     size_t i;
 
-    lstring_append_char( self->internal, '\"' );
-    for( i=0; i<lunghezza; i++ ) {
-        if ( wstring[i]>255 || !isprint(wstring[i]) ) {
-            char buffer[7];
-            snprintf( buffer, 7, "\\u%04x", wstring[i]);
-            lstring_append_cstr( self->internal, buffer );
-        } else if ( wstring[i]=='\"' ) {
-            lstring_append_cstr( self->internal, "\\\"" );
-        } else if ( wstring[i]=='\\' ) {
-            lstring_append_cstr( self->internal, "\\\\" );
-        } else {
-            char c = (char)wstring[i];
-            lstring_append_char( self->internal, c );
-        }
-    }
-    lstring_append_char( self->internal, '\"' );
+    l_assert(self!=NULL);
 
-    lfree( wstring );
+    if (str==NULL)
+    {
+        JsonBuffer_writeNull(self);
+    }
+    else
+    {
+        wstring = string1252ToWChar( str );
+        lunghezza = wcslen( wstring );
+
+        lstring_append_char( self->internal, '\"' );
+        for( i=0; i<lunghezza; i++ ) {
+            if ( wstring[i]>255 || !isprint(wstring[i]) ) {
+                char buffer[7];
+                snprintf( buffer, 7, "\\u%04x", wstring[i]);
+                lstring_append_cstr( self->internal, buffer );
+            } else if ( wstring[i]=='\"' ) {
+                lstring_append_cstr( self->internal, "\\\"" );
+            } else if ( wstring[i]=='\\' ) {
+                lstring_append_cstr( self->internal, "\\\\" );
+            } else {
+                char c = (char)wstring[i];
+                lstring_append_char( self->internal, c );
+            }
+        }
+        lstring_append_char( self->internal, '\"' );
+
+        lfree( wstring );
+    }
 }
 
 void JsonBuffer_writeNull( JsonBuffer *self ) {
     lstring_append_cstr( self->internal, "null" );
+}
+
+void JsonBuffer_writeTrue( JsonBuffer *self ) {
+    lstring_append_cstr( self->internal, "true" );
+}
+
+void JsonBuffer_writeFalse( JsonBuffer *self ) {
+    lstring_append_cstr( self->internal, "false" );
 }
 
 void JsonBuffer_writeSeparator( JsonBuffer *self ) {
@@ -120,3 +141,66 @@ const char * JsonBuffer_get( JsonBuffer *self ) {
     return lstring_to_cstr( self->internal );
 }
 
+void JsonBuffer_writeInt(JsonBuffer *self, int val)
+{
+	char space[64];
+
+	l_assert(self!=NULL);
+	sprintf(space, "%i", val);
+	lstring_append_cstr(self->internal, space);
+}
+
+void JsonBuffer_writeBool(JsonBuffer *self, lbool value)
+{
+	l_assert(self!=NULL);
+	if (value)
+	{
+		JsonBuffer_writeTrue(self);
+	}
+	else
+	{
+		JsonBuffer_writeFalse(self);
+	}
+}
+
+void JsonBuffer_writeStringAttribute( JsonBuffer *self, const char *name, const char *str, lbool writeSeparator )
+{
+	l_assert(self!=NULL);
+	l_assert(name!=NULL);
+
+	JsonBuffer_writePropertyName(self, name);
+	JsonBuffer_writeString(self, str);
+
+	if (writeSeparator)
+	{
+		JsonBuffer_writeSeparator(self);
+	}
+}
+
+void JsonBuffer_writeBoolAttribute(JsonBuffer *self, const char *name, lbool value, lbool writeSeparator)
+{
+	l_assert(self!=NULL);
+	l_assert(name!=NULL);
+
+	JsonBuffer_writePropertyName(self, name);
+	JsonBuffer_writeBool(self, value);
+
+	if (writeSeparator)
+	{
+		JsonBuffer_writeSeparator(self);
+	}
+}
+
+void JsonBuffer_writeIntAttribute(JsonBuffer *self, const char *name, int value, lbool writeSeparator)
+{
+	l_assert(self!=NULL);
+	l_assert(name!=NULL);
+
+	JsonBuffer_writePropertyName(self, name);
+	JsonBuffer_writeInt(self, value);
+
+	if (writeSeparator)
+	{
+		JsonBuffer_writeSeparator(self);
+	}
+}

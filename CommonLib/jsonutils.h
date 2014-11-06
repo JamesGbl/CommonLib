@@ -33,24 +33,224 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
 
 #include "unicodeutils.h"
+#include "lcross.h"
 
 typedef struct JsonBuffer JsonBuffer;
 
-JsonBuffer *    JsonBuffer_new();
-void            JsonBuffer_destroy( JsonBuffer *self );
+/**
+ * Function: JsonBuffer_new
+ *
+ * Create a new buffer where you can write JSON data
+ */
+JsonBuffer *JsonBuffer_new();
 
-void            JsonBuffer_startList( JsonBuffer *self );
-void            JsonBuffer_endList( JsonBuffer *self );
+/**
+ * Function: JsonBuffer_destroy
+ *
+ * Destroy the JSON buffer and all its contents
+ *
+ * Parameters:
+ *   self - The buffer to destroy. If this is NULL the
+ *     function will do nothing
+ */
+void JsonBuffer_destroy( JsonBuffer *self );
 
-void            JsonBuffer_startObject( JsonBuffer *self );
-void            JsonBuffer_endObject( JsonBuffer *self );
-void            JsonBuffer_writePropertyName( JsonBuffer *self, const char *name );
+/**
+ * Function: JsonBuffer_startList
+ *
+ * Write the list start marker to the JSON buffer. The list
+ * has to be ended with the end-list marker.
+ *
+ * Parameters:
+ *   self - The buffer where it will write to; it has to be
+ *     not null
+ */
+void JsonBuffer_startList( JsonBuffer *self );
 
-void            JsonBuffer_writeString( JsonBuffer *self, const char *str );
-void            JsonBuffer_writeNull( JsonBuffer *self );
-void            JsonBuffer_writeSeparator( JsonBuffer *self );
+/**
+ * Function: JsonBuffer_endList
+ *
+ * Write the end list marker to the JSON buffer.
+ *
+ * Parameters:
+ *   self - The buffer where it will write to; it has to be
+ *     not null
+ */
+void JsonBuffer_endList( JsonBuffer *self );
 
-int             JsonBuffer_size( JsonBuffer *self );
-const char *    JsonBuffer_get( JsonBuffer *self );
+/**
+ * Function: JsonBuffer_startObject
+ *
+ * Write the object start marker to the JSON buffer.
+ *
+ * Parameters:
+ *   self - The buffer where it will write to; it has to be
+ *     not null
+ */
+void JsonBuffer_startObject( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_endObject
+ *
+ * Write the object end marker to the JSON buffer.
+ *
+ * Parameters:
+ *   self - The buffer where it will write to; it has to be
+ *     not null
+ */
+void JsonBuffer_endObject( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_writePropertyName
+ *
+ * Write the property-start-marker to the buffer. The next JSON
+ * object will be the value of this property and has to be followed
+ * by the separator.
+ *
+ * Parameters:
+ *   self - The buffer where it will write to; it has to be
+ *     not null
+ *   name - The property name, it must be not null
+ */
+void JsonBuffer_writePropertyName( JsonBuffer *self, const char *name );
+
+/**
+ * Function: JsonBuffer_writeStringAttribute 
+ *
+ * Write a property-value pair where the value is of type string
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be
+ *     not null
+ *   name - The name of the property; it has to be not null
+ *   str - The value of the property
+ *   writeSeparator - If true I will write a separator after the
+ *     value
+ */
+void JsonBuffer_writeStringAttribute( JsonBuffer *self, const char *name, const char *str, lbool writeSeparator );
+
+/**
+ * Function: JsonBuffer_writeBoolAttribute
+ *
+ * Write a property-value pair where the value is of type boolean
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be
+ *     not null
+ *   name - The name of the property; it has to be not null
+ *   value - The value of the property
+ *   writeSeparator - If true I will write a separator after the
+ *     value
+ */
+void JsonBuffer_writeBoolAttribute(JsonBuffer *self, const char *name, lbool value, lbool writeSeparator);
+
+/**
+ * Function: JsonBuffer_writeIntAttribute
+ *
+ * Write a property-value pair where the value is of type int
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be
+ *     not null
+ *   name - The name of the property; it has to be not null
+ *   value - The value of the property
+ *   writeSeparator - If true I will write a separator after the
+ *     value
+ */
+void JsonBuffer_writeIntAttribute(JsonBuffer *self, const char *name, int value, lbool writeSeparator);
+
+/**
+ * Function: JsonBuffer_writeString
+ *
+ * Write a string to this JSON stream. The string can be NULL
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be
+ *     not null
+ *   str - The string that I will write; it can be NULL
+ */
+void JsonBuffer_writeString( JsonBuffer *self, const char *str );
+
+/**
+ * Function: JsonBuffer_writeInt
+ *
+ * Write an integer to this JSON stream.
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be
+ *     not null
+ *   val - The integer to write
+ */
+void JsonBuffer_writeInt(JsonBuffer *self, int val);
+
+/**
+ * Function: JsonBuffer_writeNull
+ *
+ * Write a null to this JSON stream.
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be not null
+ */
+void JsonBuffer_writeNull( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_writeFalse
+ *
+ * Write false to this JSON stream.
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be not null
+ */
+void JsonBuffer_writeFalse( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_writeTrue
+ *
+ * Write true to this JSON stream.
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be not null
+ */
+void JsonBuffer_writeTrue( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_writeTrue
+ *
+ * Write this boolean to this JSON stream.
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be not null
+ */
+void JsonBuffer_writeBool(JsonBuffer *self, lbool value);
+
+/**
+ * Function: JsonBuffer_writeSeparator
+ * 
+ * Write the separator between couples (for objects) and objects (for arrays)
+ *
+ * Parameters:
+ *   self - The buffer where I must write to; it has to be not null
+ */
+void JsonBuffer_writeSeparator( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_size
+ *
+ * Get the size of this stream
+ *
+ * Parameters:
+ *   self - The buffer
+ */
+int JsonBuffer_size( JsonBuffer *self );
+
+/**
+ * Function: JsonBuffer_size
+ *
+ * Get the memory address of the stream data
+ *
+ * Parameters:
+ *   self - The buffer
+ */
+const char *JsonBuffer_get( JsonBuffer *self );
 
 #endif
