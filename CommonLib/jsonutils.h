@@ -45,6 +45,31 @@ typedef struct JsonBuffer JsonBuffer;
 JsonBuffer *JsonBuffer_new();
 
 /**
+ * Function: JsonBuffer_setIndent
+ *
+ * If the indent-enabled flag is active the json will
+ * be indented while it is written.
+ *
+ * Parameters:
+ *   self - The JsonBuffer object (must not be NULL)
+ *   indentEnabled - True se il JSON viene indentato
+ *     mentre viene scritto
+ */
+void JsonBuffer_setIndent(JsonBuffer *self, lbool indentEnabled);
+
+/**
+ * Function: JsonBuffer_getIndent
+ *
+ * Get the status of the indent-enabled flag
+ *
+ * Parameters:
+ *   self - The JsonBuffer object (must not be NULL)
+ *
+ * Return: the status of the indent-flag
+ */
+lbool JsonBuffer_getIndent(JsonBuffer *self);
+
+/**
  * Function: JsonBuffer_destroy
  *
  * Destroy the JSON buffer and all its contents

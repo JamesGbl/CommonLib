@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "lerror.h"
 #include "lcross.h"
 #include "lmemory.h"
@@ -43,11 +47,11 @@ void lerror_set_internal( lerror **err, const char *domain, const char *message 
     l_assert( *err == NULL );
 
     *err = lmalloc( sizeof( struct lerror ) );
-    (*err)->message = strdup( message );
+    (*err)->message = _strdup( message );
     (*err)->stacktrace = lstring_new();
 
     if ( domain!=NULL ) {
-	(*err)->domain = strdup( domain );
+	(*err)->domain = _strdup( domain );
     } else {
 	(*err)->domain = NULL;
     }

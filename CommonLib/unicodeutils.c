@@ -32,7 +32,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 */ 
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <windows.h>
 /**

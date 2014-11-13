@@ -28,6 +28,11 @@ For more information, please refer to <http://unlicense.org/>
 
 Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
+
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "jsonutils.h"
 #include "lstring.h"
 #include "lmemory.h"
@@ -41,46 +46,110 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #define snprintf _snprintf
 #endif
 
-struct JsonBuffer {
+struct JsonBuffer 
+{
     lstring *internal;
+	lbool indentFlag;
+	int currentIndentLevel;
 };
 
-
-JsonBuffer* JsonBuffer_new() {
+JsonBuffer* JsonBuffer_new() 
+{
     JsonBuffer *self = lmalloc(sizeof(JsonBuffer));
     self->internal = lstring_new();
+	self->indentFlag = LFALSE;
+	self->currentIndentLevel = 0;
     return self;
 }
 
-void JsonBuffer_destroy( JsonBuffer *self ) {
+void JsonBuffer_setIndent(JsonBuffer *self, lbool indentEnabled)
+{
+	l_assert(self!=NULL);
+
+	self->indentFlag = indentEnabled;
+}
+
+lbool JsonBuffer_getIndent(JsonBuffer *self)
+{
+	l_assert(self!=NULL);
+
+	return self->indentFlag;
+}
+
+static void JsonBuffer_newLineAndIndent(JsonBuffer *self)
+{
+	int i = 0;
+
+	l_assert(self!=NULL);
+	if (self->currentIndentLevel<0) return;
+
+	lstring_append_char(self->internal, '\n');
+	for (i=0; i<self->currentIndentLevel; i++)
+	{
+		lstring_append_char(self->internal, '\t');
+	}
+}
+
+void JsonBuffer_destroy( JsonBuffer *self ) 
+{
     if ( self==NULL ) return;
 
     lstring_delete( self->internal );
     lfree( self );
 }
 
-void JsonBuffer_startList( JsonBuffer *self ) {
+void JsonBuffer_startList( JsonBuffer *self ) 
+{
     lstring_append_cstr( self->internal, "[" );
+
+	if (self->indentFlag)
+	{
+		self->currentIndentLevel++;
+		JsonBuffer_newLineAndIndent(self);
+	}
 }
 
-void JsonBuffer_endList( JsonBuffer *self ) {
+void JsonBuffer_endList( JsonBuffer *self ) 
+{
+	if (self->indentFlag)
+	{
+		self->currentIndentLevel--;
+		JsonBuffer_newLineAndIndent(self);
+	}
+
     lstring_append_cstr( self->internal, "]" );
 }
 
-void JsonBuffer_startObject( JsonBuffer *self ) {
+void JsonBuffer_startObject( JsonBuffer *self ) 
+{
     lstring_append_cstr( self->internal, "{" );
+
+	if (self->indentFlag)
+	{
+		self->currentIndentLevel++;
+		JsonBuffer_newLineAndIndent(self);
+	}
 }
 
-void JsonBuffer_endObject( JsonBuffer *self ) {
+void JsonBuffer_endObject( JsonBuffer *self ) 
+{
+	if (self->indentFlag)
+	{
+		self->currentIndentLevel--;
+		JsonBuffer_newLineAndIndent(self);
+	}
+
     lstring_append_cstr( self->internal, "}" );
 }
 
-void JsonBuffer_writePropertyName( JsonBuffer *self, const char *name ) {
+void JsonBuffer_writePropertyName( JsonBuffer *self, const char *name ) 
+{
     JsonBuffer_writeString( self, name );
     lstring_append_cstr( self->internal, ":" );
 }
 
-void JsonBuffer_writeString( JsonBuffer *self, const char *str ) {
+void JsonBuffer_writeString( JsonBuffer *self, const char *str ) 
+{
     wchar_t *wstring;
     size_t lunghezza;
     size_t i;
@@ -117,27 +186,38 @@ void JsonBuffer_writeString( JsonBuffer *self, const char *str ) {
     }
 }
 
-void JsonBuffer_writeNull( JsonBuffer *self ) {
+void JsonBuffer_writeNull( JsonBuffer *self ) 
+{
     lstring_append_cstr( self->internal, "null" );
 }
 
-void JsonBuffer_writeTrue( JsonBuffer *self ) {
+void JsonBuffer_writeTrue( JsonBuffer *self ) 
+{
     lstring_append_cstr( self->internal, "true" );
 }
 
-void JsonBuffer_writeFalse( JsonBuffer *self ) {
+void JsonBuffer_writeFalse( JsonBuffer *self ) 
+{
     lstring_append_cstr( self->internal, "false" );
 }
 
-void JsonBuffer_writeSeparator( JsonBuffer *self ) {
+void JsonBuffer_writeSeparator( JsonBuffer *self ) 
+{
     lstring_append_char( self->internal, ',' );
+
+	if (self->indentFlag)
+	{
+		JsonBuffer_newLineAndIndent(self);
+	}
 }
 
-int JsonBuffer_size( JsonBuffer *self ) {
+int JsonBuffer_size( JsonBuffer *self ) 
+{
     return lstring_len( self->internal );
 }
 
-const char * JsonBuffer_get( JsonBuffer *self ) {
+const char * JsonBuffer_get( JsonBuffer *self ) 
+{
     return lstring_to_cstr( self->internal );
 }
 

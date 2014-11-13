@@ -60,6 +60,18 @@ DbConnection_Sqlite *DbConnection_Sqlite_new( const char *fileName );
 DbConnection_Sqlite *DbConnection_Sqlite_new_mem( void );
 
 /**
+ * Function: DbConnection_Sqlite_new_embed
+ *
+ * Embed an existing sqlite3* connection in this high-lever connection.
+ * The low-level connection will not be destroyed when the high level
+ * connection will be.
+ *
+ * Returns:
+ *     The connection
+ */
+DbConnection_Sqlite *DbConnection_Sqlite_new_embed(void *handle);
+
+/**
  * Function: DbConnection_export_to_sqlite
  * 
  * Save a SQLite database to a file
