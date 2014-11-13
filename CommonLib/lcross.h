@@ -55,6 +55,12 @@ int l_stricmp( const char *s1, const char *s2 );
  */
 uint16_t l_log2(uint32_t n);
 
+/**
+ * Macro: l_break_to_debugger
+ * Programmatic debugger breakpoint
+ */
+void l_break_to_debugger(void);
+
 #define stringize_op1( x )              #x
 
 /**
