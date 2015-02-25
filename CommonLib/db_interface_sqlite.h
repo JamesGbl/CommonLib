@@ -47,7 +47,7 @@ typedef struct DbConnection_Sqlite DbConnection_Sqlite;
  * Returns:
  *     The connection or NULL in error conditions (IO error)
  */
-DbConnection_Sqlite *DbConnection_Sqlite_new( const char *fileName );
+DbConnection_Sqlite *DbConnection_Sqlite_new( const char *fileName, lerror **error );
 
 /**
  * Function: DbConnection_Sqlite_new_mem
@@ -60,16 +60,20 @@ DbConnection_Sqlite *DbConnection_Sqlite_new( const char *fileName );
 DbConnection_Sqlite *DbConnection_Sqlite_new_mem( void );
 
 /**
- * Function: DbConnection_Sqlite_new_embed
+ * Function: DbConnection_Sqlite_get_handle
  *
- * Embed an existing sqlite3* connection in this high-lever connection.
- * The low-level connection will not be destroyed when the high level
- * connection will be.
+ * Get the internal SQLite handle of this data connection. This function
+ * is useful if you want to use some SQLite related functions that the
+ * database independent API doesn't offer, ad ex. adding custom C
+ * functions to the SQLite SQL language.
+ *
+ * Parameters:
+ *   conn - The SQLite data connection (must not be NULL)
  *
  * Returns:
- *     The connection
+ *   The internal SQLite connection (sqlite3 *)
  */
-DbConnection_Sqlite *DbConnection_Sqlite_new_embed(void *handle);
+void *DbConnection_Sqlite_get_handle(DbConnection_Sqlite *conn);
 
 /**
  * Function: DbConnection_export_to_sqlite

@@ -26,11 +26,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>
 */ 
-
-#ifdef _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "lstring.h"
 #include "lcross.h"
 #include "lmemory.h"
@@ -40,32 +35,17 @@ For more information, please refer to <http://unlicense.org/>
 #include <ctype.h>
 #include <stdarg.h>
 
-static void lstring_initialize( lstring* str )
-{
-    str->buf = NULL;
-    str->bufLen = 0;
-    str->len = 0;
-}
-
-static void lstring_finalize( lstring* str )
-{
-	if ( str==NULL ) return;
-
-    if( str->buf!=NULL ) 
-    {
-        lfree(str->buf);
-    }
-    lstring_initialize( str );
-}
-
 /*
 ** Costruisce una nuova stringa vuota
 */
 lstring* lstring_new( void )
 {
-    lstring* str = (lstring *)lmalloc(sizeof(struct lstring));
-    lstring_initialize(str);
-    return str;
+	lstring_header* str_header = (lstring_header *)lmalloc(32);
+	lstring *str = ((lstring *)str_header) + sizeof(lstring_header);
+	str_header->bufLen = 32-sizeof(struct lstring_header);
+	str_header->len = 0;
+	str[0]='\x0';
+	return str;
 }
 
 /*
@@ -74,9 +54,14 @@ lstring* lstring_new( void )
 */
 lstring* lstring_new_from_cstr( const char *cstr )
 {
-    lstring* str = lstring_new();
-    lstring_from_cstr(str, cstr);
-    return str;
+	int len = strlen(cstr);	
+	int bufLen = 2<<l_log2(len + 50 + sizeof(struct lstring_header));
+	lstring_header* str = (lstring_header *)lmalloc(bufLen);
+	lstring* s = ((char *)str)+sizeof(lstring_header);
+	str->len = len;
+	str->bufLen = bufLen - sizeof(struct lstring_header);
+	strcpy(s, cstr);
+    return s;
 }    
 
 /*
@@ -85,40 +70,39 @@ lstring* lstring_new_from_cstr( const char *cstr )
 */
 lstring* lstring_new_from_lstr( lstring* self )
 {
-    lstring* str = (lstring *)lmalloc(sizeof(struct lstring));
-    str->bufLen = self->bufLen;
-    str->len = self->len;
-
-    str->buf = (char *)lmalloc(self->bufLen);
-    memcpy( str->buf, self->buf, self->len+1 );
-    
-    return str;
+	lstring_header *self_header = (lstring_header*)(self-sizeof(struct lstring_header));
+	lstring_header *str = (lstring_header *)lmalloc(sizeof(struct lstring_header) + self_header->len);
+	lstring* s = ((char *)str)+sizeof(lstring_header);
+	memcpy(str, self_header, self_header->bufLen + sizeof(struct lstring_header));
+	return s;
 }
 
 /*
 ** Reinizializza una lstring a partire da una stringa
 ** C
 */
-void lstring_from_cstr( lstring* str, const char *other )
+lstring *lstring_from_cstr_f( lstring* str, const char *other )
 {
     lstring_truncate( str, 0 );
     if ( other!=NULL ) {
-        lstring_append_generic( str, other, strlen(other) );
-    }
+        return lstring_append_generic_f( str, other, strlen(other) );
+    } else {
+		return str;
+	}
 }
 
 /*
 ** Reinizializza una lstring a partire da una lstring
 */
-void lstring_from_lstr( lstring* str, lstring *other )
+lstring* lstring_from_lstr_f( lstring* str, lstring *other )
 {
+	lstring_header *other_header = (lstring_header*)(other-sizeof(struct lstring_header));
+
     l_assert( str!=NULL );
     l_assert( other!=NULL );
 
     lstring_truncate( str, 0 );
-    if ( other->buf!=NULL ) {
-        lstring_append_generic( str, other->buf, other->len );
-    }
+	return lstring_append_generic_f( str, other, other_header->len );
 }
 
 /*
@@ -127,34 +111,33 @@ void lstring_from_lstr( lstring* str, lstring *other )
 */
 void lstring_delete( lstring* str )
 {
-    if ( str==NULL ) return;
-
-    lstring_finalize(str);
-    lfree(str);
+	if (str==NULL) return;
+	lfree(str-sizeof(struct lstring_header));
 }    
 
-void lstring_append_generic( lstring* str, const char *other, int otherLen)
+lstring *lstring_append_generic_f( lstring* str, const char *other, int otherLen)
 {
-    int newLen = otherLen + str->len;
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+    int newLen = otherLen + str_header->len;
     int newBufLen = 2<<l_log2(newLen + 50);
 
-    if( str->bufLen > newBufLen )
+    if( str_header->bufLen > newBufLen )
     {
-        newBufLen = str->bufLen;
+        newBufLen = str_header->bufLen;
     }    
 
-    if( str->buf==NULL )
+    if( str_header->bufLen<newBufLen )
     {
-        str->buf = lmalloc( newBufLen );
-    } else if( str->bufLen<newBufLen )
-    {
-        str->buf = lrealloc(str->buf, newBufLen);
+		str_header = (lstring_header *)lrealloc(str_header, newBufLen+sizeof(lstring_header));
+		str = ((lstring*)str_header)+sizeof(lstring_header);
     }    
 
-    memcpy( str->buf+str->len, other, otherLen );
-    str->buf[str->len+otherLen]=0;
-    str->len = newLen;
-    str->bufLen = newBufLen;
+    memcpy( str+str_header->len, other, otherLen );
+    str[str_header->len+otherLen]=0;
+    str_header->len = newLen;
+    str_header->bufLen = newBufLen;
+
+	return str;
 }
 
 /*
@@ -162,7 +145,7 @@ void lstring_append_generic( lstring* str, const char *other, int otherLen)
 ** \param str Stringa alla quale aggiungere
 ** \param other Stringa da aggiungere
 */
-void lstring_append_cstr( lstring* str, const char *other )
+lstring *lstring_append_cstr_f( lstring* str, const char *other )
 {
     int otherLen;
 
@@ -170,16 +153,16 @@ void lstring_append_cstr( lstring* str, const char *other )
     l_assert( other!=NULL );
 
     otherLen = strlen(other);
-    lstring_append_generic( str, other, otherLen );
+    return lstring_append_generic_f( str, other, otherLen );
 }
 
 /*
 ** Aggiunge un carattere
 */
-void lstring_append_char( lstring* str, char c ) {
+lstring* lstring_append_char_f( lstring* str, char c ) {
     l_assert( str!=NULL );
 
-    lstring_append_generic( str, &c, 1 );
+    return lstring_append_generic_f( str, &c, 1 );
 }
 
 /*
@@ -187,20 +170,12 @@ void lstring_append_char( lstring* str, char c ) {
 ** \param str Stringa alla quale aggiungere
 ** \param other Stringa da aggiungere
 */
-void lstring_append_lstring( lstring* str, lstring* other )
+lstring* lstring_append_lstring_f( lstring* str, lstring* other )
 {
+	lstring_header *other_header = (lstring_header *)(other - sizeof(lstring_header));
     l_assert( str!=NULL );
     l_assert( other!=NULL );
-    lstring_append_generic( str, other->buf, other->len );
-}    
-
-/*
-** Converte una stringa in una stringa C
-*/
-const char *lstring_to_cstr( lstring* str )
-{
-    l_assert( str!=NULL );
-    return str->buf;
+    return lstring_append_generic_f( str, other, other_header->len );
 }    
 
 /*
@@ -209,14 +184,17 @@ const char *lstring_to_cstr( lstring* str )
 ** \param str La stringa da preparare
 ** \param len Il numero di caratteri
 */
-void lstring_reserve( lstring* str, int len )
+lstring* lstring_reserve_f( lstring* str, int len )
 {
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
     l_assert( str!=NULL );
-    if( str->bufLen<len )
+    if( str_header->bufLen<len )
     {
-        str->buf = lrealloc( str->buf, sizeof(char)*len );
-        str->bufLen = len;
+		str_header = (lstring_header *)lrealloc(str_header, len+sizeof(lstring_header));
+		str = ((lstring*)str_header)+sizeof(lstring_header);
     }
+
+	return str;
 }    
 
 /*
@@ -225,25 +203,25 @@ void lstring_reserve( lstring* str, int len )
 */
 void lstring_ltrim( lstring* str )
 {
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
     int i;
 
     l_assert( str!=NULL );
 
-    if( str->buf!=NULL && str->len>0 )
-    {
-        i = 0;
-        while( str->buf[i] != 0 && isspace(str->buf[i]) )
-        {
-            i++;
-        }
+    if( str_header->len==0 ) return;
 
-        if( i>0 )
-        {    
-            str->len = str->len - i;
-            memmove( str->buf, str->buf+i, str->len );
-            str->buf[str->len] = 0;
-        }
-    }    
+    i = 0;
+    while( str[i] != 0 && isspace(str[i]) )
+    {
+        i++;
+    }
+
+    if( i>0 )
+    {    
+        str_header->len = str_header->len - i;
+        memmove( str, str+i, str_header->len );
+        str[str_header->len] = 0;
+    }
 }
 
 /*
@@ -252,16 +230,17 @@ void lstring_ltrim( lstring* str )
 */
 void lstring_rtrim( lstring* str )
 {
-    l_assert( str!=NULL );
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
 
-    if( str->buf!=NULL && str->len>0 )
+    l_assert( str!=NULL );
+    if( str_header->len==0 ) return;
+
+    while( str_header->len > 0 && isspace(str[str_header->len-1]) )
     {
-        while( str->len > 0 && isspace(str->buf[str->len-1]) )
-        {
-            str->len = str->len-1;
-        }    
-        str->buf[str->len] = 0;
-    }
+        str_header->len = str_header->len-1;
+    }  
+
+    str[str_header->len] = 0;
 }
 
 /*
@@ -284,10 +263,7 @@ int lstring_contains( lstring* str, const char *other )
     l_assert( str!=NULL );
     l_assert( other!=NULL );
 
-    if( str->buf==NULL )
-    {
-        return 0;
-    }    else if( strstr( str->buf, other )!=NULL )
+	if( strstr( str, other )!=NULL )
     {
         return 1;
     } else
@@ -304,10 +280,7 @@ int lstring_equals_cstr( lstring* str, const char *cstr )
     l_assert( str!=NULL );
     l_assert( cstr!=NULL );
 
-    if( str->buf==NULL )
-    {
-        return cstr==NULL;
-    } else if( 0==strcmp(str->buf, cstr) )
+    if( 0==strcmp(str, cstr) )
     {
         return 1;
     } else
@@ -321,22 +294,25 @@ int lstring_equals_cstr( lstring* str, const char *cstr )
 */
 int lstring_equals_lstr( lstring* str_1, lstring* str_2 )
 {
+	lstring_header *str1_header = (lstring_header *)(str_1 - sizeof(lstring_header));
+	lstring_header *str2_header = (lstring_header *)(str_2 - sizeof(lstring_header));
+
     l_assert( str_1!=NULL );
     l_assert( str_2!=NULL );
 
-    if( str_1->buf==NULL )
+    if( str_1==NULL )
     {
-        return str_2->buf==NULL;
-    } else if( str_2->buf==NULL )
-    {
-        return 0;
-    } else if( str_1->len != str_2->len )
+        return str_2==NULL;
+    } else if( str_2==NULL )
     {
         return 0;
-    } else if( str_1->buf==str_2->buf )
+    } else if( str1_header->len != str2_header->len )
+    {
+        return 0;
+    } else if( str_1==str_2 )
     {
         return 1;
-    } else if( 0==memcmp(str_1->buf, str_2->buf, str_1->len) )
+    } else if( 0==memcmp(str_1, str_2, str1_header->len) )
     {
         return 1;
     } else
@@ -352,11 +328,12 @@ int lstring_equals_lstr( lstring* str_1, lstring* str_2 )
 void lstring_toupper( lstring* str )
 {
     int i;
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
 
-    if( str->buf!=NULL ) {
-    for ( i=0; i<str->len; i++ ) {
-        str->buf[i] = toupper( str->buf[i] );
-    }
+    if( str!=NULL ) {
+		for ( i=0; i<str_header->len; i++ ) {
+			str[i] = toupper( str[i] );
+		}
     }    
 }
 
@@ -367,11 +344,12 @@ void lstring_toupper( lstring* str )
 void lstring_tolower( lstring* str )
 {
     int i;
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
 
-    if( str->buf!=NULL ) {
-    for ( i=0; i<str->len; i++ ) {
-        str->buf[i]=tolower(str->buf[i]);
-    }
+    if( str!=NULL ) {
+		for ( i=0; i<str_header->len; i++ ) {
+			str[i]=tolower(str[i]);
+		}
     }    
 }    
 
@@ -381,9 +359,8 @@ void lstring_tolower( lstring* str )
 */
 void lstring_replacechar( lstring* str, char orig, char dest )
 {
-    char *buf;
+    char *buf = str;
 
-    buf = str->buf;
     if( buf!=NULL )
     {
         while( (*buf)!=0 )
@@ -405,14 +382,14 @@ int lstring_ends_with_cstr( lstring* str, const char *suffix )
     char *temp;
     int tempLen;
     
-    if( str->buf==NULL )
+    if( str==NULL )
     {
         return 0;
     } else
     {
-        temp = strstr( str->buf, suffix );
+        temp = strstr( str, suffix );
         tempLen = strlen( suffix );
-        if( temp==(str->buf + str->len - tempLen ) )
+        if( temp==(str + lstring_len(str) - tempLen ) )
         {
             return 1;
         } else
@@ -430,9 +407,9 @@ int lstring_last_index_of( lstring* str, char c )
 {
     int i;
 
-    for( i=str->len-1; i>=0; i-- )
+    for( i=lstring_len(str)-1; i>=0; i-- )
     {
-        if( str->buf[i]==c )
+        if( str[i]==c )
         {
             return i;
         }    
@@ -446,17 +423,14 @@ int lstring_last_index_of( lstring* str, char c )
 */
 void lstring_truncate( lstring* str, int l )
 {
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
     l_assert( str!=NULL );
     l_assert( l>=0 );
 
-    if ( str->buf==NULL ) {
-        return;
-    }
-
-    if( l<=str->len )
+	if( l<=str_header->len )
     {
-        str->buf[l] = '\x0';
-        str->len = l;
+        str[l] = '\x0';
+        str_header->len = l;
     }    
 }
 
@@ -465,27 +439,61 @@ void lstring_truncate( lstring* str, int l )
 */
 void lstring_reset( lstring* str )
 {
-    lstring_finalize( str );
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+	str_header->len=0;
+	str[0]='\x0';
 }
 
 /*
 ** Lunghezza di una stringa
 */
 int lstring_len( lstring* str ) {
-    return str->len;
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+    return str_header->len;
 }
 
 /*
 ** Aggiunge alla stringa un preformattato sprintf
 */
-void lstring_append_sprintf( lstring *str, const char *format, ... ) {
-    char buffer[512];
+lstring* lstring_append_sprintf_f( lstring *str, const char *format, ... ) {
     va_list args;
+    char buffer[512];
 
     va_start( args, format );
     vsnprintf( buffer, 511, format, args );
     va_end( args );
 
     buffer[511] = '0';
-    lstring_append_cstr( str, buffer );
+    return lstring_append_cstr_f( str, buffer );
 }
+
+/*
+** Check the empty string
+*/
+lbool lstring_empty(lstring *str) {
+	return lstring_len(str) == 0;
+}
+
+/*
+** Find a characted in a string
+*/
+int lstring_index_of_char(lstring *str, int startidx, char p) {
+	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+	int i;
+
+	l_assert(str!=NULL);
+	l_assert(startidx>=0);
+
+	if (startidx >= str_header->len) {
+		return -1;
+	}
+
+	for (i=startidx; i<str_header->len; i++) {
+		if (str[i]==p) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+

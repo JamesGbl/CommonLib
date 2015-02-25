@@ -41,7 +41,7 @@ slist* slist_new( int initialSize ) {
     int i;
     slist* self;
     
-    self = lmalloc( sizeof(slist) );
+    self = (slist *)lmalloc( sizeof(slist) );
     self->vect = lvector_new( initialSize );
 
     for ( i=0; i<initialSize; i++ ) {
@@ -57,7 +57,7 @@ void slist_destroy( slist* self ) {
     if ( !self ) return;
 
     for( i=0; i<lvector_len( self->vect ); i++ ) {
-        lstring_delete( lvector_at( self->vect, i ) );
+        lstring_delete( (lstring*) lvector_at( self->vect, i ) );
     }
     lvector_delete( self->vect );
     lfree( self );
@@ -83,7 +83,7 @@ void slist_resize( slist* self, int newLen ) {
         }
     } else if ( oldLen > newLen ) {
         for ( i=newLen; i<oldLen; i++ ) {
-            lstring_delete( lvector_at( self->vect, i ) );
+            lstring_delete( (lstring*)lvector_at( self->vect, i ) );
         }
 
         lvector_resize( self->vect, newLen );
@@ -94,9 +94,9 @@ const char* slist_at( slist *self, int n ) {
     lstring *s;
 
     if ( !self ) return NULL;
-    s = lvector_at( self->vect, n );
+    s = (lstring*)lvector_at( self->vect, n );
     if ( !s ) return "";
-    return lstring_to_cstr( s );
+    return s;
 }
 
 void slist_set( slist *self, int n, const char *str ) {
@@ -104,11 +104,13 @@ void slist_set( slist *self, int n, const char *str ) {
 
     if ( !self ) return;
     if ( n<0 || n>=lvector_len( self->vect ) ) return;
-    s = lvector_at( self->vect, n );
+    s = (lstring*)lvector_at( self->vect, n );
     if ( !s ) {
-        s = lstring_new();
+		s = lstring_new_from_cstr(str);
         lvector_set( self->vect, n, s );
-    }
-    lstring_from_cstr( s, str );
+    } else {
+		s = lstring_from_cstr_f( s, str );
+	}
+    lvector_set( self->vect, n, s );
 }
 

@@ -39,6 +39,110 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
  * File: db_interface.h
  */
 
+typedef struct DbIterator DbIterator;
+
+/**
+ * Class: DbConnection
+ * 
+ * This class represent an abstract database connection. You can
+ * create you database connections using the appropriate
+ * constructor functions.
+ */
+typedef struct DbConnection DbConnection;
+typedef struct DbConnection_class DbConnection_class;
+typedef struct DbPrepared DbPrepared;
+
+struct DbConnection {
+    DbConnection_class *oClass;
+    lstring *lastError;
+    lstring *buffer;
+};
+
+struct DbConnection_class {
+    void (*destroy)( DbConnection *self );
+    int  (*sql_exec)( DbConnection *self, const char *sql, lerror **error );
+    DbIterator* (*sql_retrieve)( DbConnection *self, const char *sql, lerror **error );
+    DbPrepared* (*sql_prepare)( DbConnection *self, const char *sql, lerror **error );
+};
+
+void DbConnection_init( DbConnection *self, DbConnection_class *oClass );
+const char *DbConnection_last_error_message( DbConnection *self );
+
+/**
+ * Function: DbConnection_destroy
+ *
+ * Free this database connection
+ *
+ * Parameters:
+ *    self - The database connection. Can be NULL (does nothing)
+ */
+void DbConnection_destroy( DbConnection *self );
+
+/**
+ * Function: DbConnection_sql_exec
+ *
+ * Execute a query in a DB connection discarding the result.
+ *
+ * Parameters:
+ *    self  - The connection
+ *    sql   - The query to execute
+ *    error - The error object if you want to know the error message
+ *
+ * Returns:
+ *    A true value if the query run correctly or a false value if an error
+ *    was thrown. The error object, if not NULL, is populated with the error
+ *    message.
+ */
+lbool DbConnection_sql_exec( DbConnection *self, const char *sql, lerror **error );
+
+/**
+ * Function: DbConnection_sql_retrieve
+ *
+ * Create an iterator pre-populated with the data selected from the query
+ *
+ * Parameters:
+ *    self  - The connection
+ *    sql   - The query to execute
+ *    error - The error object if you want to know the error message
+ *
+ * Returns:
+ *    The iterator or NULL in the case of error.
+ */
+DbIterator *DbConnection_sql_retrieve( DbConnection *self, const char *sql, lerror **error );
+
+/**
+ * Function: DbConnection_sql_prepare
+ *
+ * Create a prepared query. Parameters must be represented by a "?".
+ *
+ * Parameters:
+ *    self  - The connection.
+ *    sql   - The query to execute
+ *    error - The error object
+ *
+ * Returns:
+ *    The prepared query or NULL in error conditions.
+ */
+DbPrepared *DbConnection_sql_prepare( DbConnection *self, const char *sql, lerror **error );
+
+/**
+ * Function: DbConnection_sql_into
+ *
+ * Execute a select and get a single result.
+ *
+ * Parameters:
+ *    self  - The connection.
+ *    sql   - The query to execute
+ *    error - The error object
+ *
+ * Returns:
+ *    The result as a string or NULL. If the result was a NULL you can an empty string.
+ *    If there is an error condition this function will return NULL. If the result of the
+ *    query doesn't have only one row and one column this function will return an empty
+ *    string. In other words, the last condition doesn't represent an error.
+ */
+const char *DbConnection_sql_into( DbConnection *self, const char *sql, lerror **error );
+
 /**
  * Class: DbIterator
  *
@@ -59,7 +163,6 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
  * (end)
  */
 
-typedef struct DbIterator DbIterator;
 typedef struct DbIterator_class DbIterator_class;
 
 struct DbIterator_class {
@@ -73,9 +176,10 @@ struct DbIterator_class {
 
 struct DbIterator {
     DbIterator_class *oClass;
+	DbConnection *originatingConnection;
 };
 
-void           DbIterator_init( DbIterator *self, DbIterator_class *oClass );
+void DbIterator_init( DbConnection *connection, DbIterator *self, DbIterator_class *oClass );
 
 /**
  * Function: DbIterator_destroy
@@ -85,7 +189,7 @@ void           DbIterator_init( DbIterator *self, DbIterator_class *oClass );
  * Parameters:
  *     self - Iterator (can be NULL)
  */ 
-void           DbIterator_destroy( DbIterator *self );
+void DbIterator_destroy( DbIterator *self );
 
 /**
  * Function: DbIterator_dammi_numero_campi
@@ -95,7 +199,7 @@ void           DbIterator_destroy( DbIterator *self );
  * Parameters:
  *     self - Iterator (not NULL)
  */
-int            DbIterator_dammi_numero_campi( DbIterator *self );
+int DbIterator_dammi_numero_campi( DbIterator *self );
 
 /**
  * Function: DbIterator_dammi_nome_campo
@@ -106,7 +210,7 @@ int            DbIterator_dammi_numero_campi( DbIterator *self );
  *     self - Iterator (not NULL)
  *     i - The column number (starting from 0)
  */
-const char *   DbIterator_dammi_nome_campo( DbIterator *self, int i );
+const char *DbIterator_dammi_nome_campo( DbIterator *self, int i );
 
 /**
  * Function: DbIterator_prossima_riga
@@ -119,7 +223,7 @@ const char *   DbIterator_dammi_nome_campo( DbIterator *self, int i );
  * Returns:
  *     TRUE if there was a next row, FALSE elsewhere.
  */
-int            DbIterator_prossima_riga( DbIterator *self );
+int DbIterator_prossima_riga( DbIterator *self );
 
 /**
  * Function: DbIterator_controlla_valore_nullo
@@ -134,7 +238,7 @@ int            DbIterator_prossima_riga( DbIterator *self );
  * Returns:
  *     TRUE if it was NULL and FALSE elsewhere.
  */
-lbool          DbIterator_controlla_valore_nullo( DbIterator *self, int i );
+lbool DbIterator_controlla_valore_nullo( DbIterator *self, int i );
 
 /**
  * Function: DbIterator_dammi_valore
@@ -149,7 +253,17 @@ lbool          DbIterator_controlla_valore_nullo( DbIterator *self, int i );
  *     The value in string format. If the result is NULL this function will
  *     return an empty string.
  */
-const char *   DbIterator_dammi_valore( DbIterator *self, int i );
+const char *DbIterator_dammi_valore( DbIterator *self, int i );
+
+/**
+ * Function: DbIterator_get_originating_connection
+ *
+ * Get the connection that originated the connection
+ *
+ * Parameters:
+ *   self - The connection
+ */
+DbConnection *DbIterator_get_originating_connection(DbIterator *self);
 
 
 /**
@@ -158,7 +272,6 @@ const char *   DbIterator_dammi_valore( DbIterator *self, int i );
  * This class represent a prepared query. You can create a prepared
  * query using <DbConnection_sql_prepare>
  */
-typedef struct DbPrepared DbPrepared;
 typedef struct DbPrepared_class DbPrepared_class;
 
 struct DbPrepared_class {
@@ -175,11 +288,12 @@ struct DbPrepared_class {
 
 struct DbPrepared {
     DbPrepared_class *oClass;
+	DbConnection *originatingConnection;
     lstring *buffer;
     lstring *lastError;
 };
 
-void           DbPrepared_init( DbPrepared *self, DbPrepared_class *oClass );
+void DbPrepared_init( DbConnection *connection, DbPrepared *self, DbPrepared_class *oClass );
 
 /**
  * Function: DbPrepared_destroy
@@ -188,7 +302,7 @@ void           DbPrepared_init( DbPrepared *self, DbPrepared_class *oClass );
  * Parameters:
  *     self - The prepared query (can be NULL)
  */
-void           DbPrepared_destroy( DbPrepared* self );
+void DbPrepared_destroy( DbPrepared* self );
 
 /**
  * Function: DbPrepared_dammi_numero_parametri
@@ -197,7 +311,7 @@ void           DbPrepared_destroy( DbPrepared* self );
  * Parameters:
  *     self - The prepared query (cannot be NULL)
  */
-int            DbPrepared_dammi_numero_parametri( DbPrepared* self );
+int DbPrepared_dammi_numero_parametri( DbPrepared* self );
 
 /**
  * Function: DbPrepared_metti_parametro_intero
@@ -208,7 +322,7 @@ int            DbPrepared_dammi_numero_parametri( DbPrepared* self );
  *     n - The parameter number (0 <= n < parametersCount)
  *     valore - The value to put
  */
-void           DbPrepared_metti_parametro_intero( DbPrepared* self, int n, int valore );
+void DbPrepared_metti_parametro_intero( DbPrepared* self, int n, int valore );
 
 /**
  * Function: DbPrepared_metti_parametro_null
@@ -218,7 +332,7 @@ void           DbPrepared_metti_parametro_intero( DbPrepared* self, int n, int v
  *     self - The prepared query (cannot be NULL)
  *     n - The parameter number (0 <= n < parametersCount)
  */
-void           DbPrepared_metti_parametro_nullo( DbPrepared* self, int n );
+void DbPrepared_metti_parametro_nullo( DbPrepared* self, int n );
 
 /**
  * Function: DbPrepared_metti_parametro_stringa
@@ -229,7 +343,7 @@ void           DbPrepared_metti_parametro_nullo( DbPrepared* self, int n );
  *     n - The parameter number (0 <= n < parametersCount)
  *     valore - The value to put
  */
-void           DbPrepared_metti_parametro_stringa( DbPrepared* self, int n, const char *valore );
+void DbPrepared_metti_parametro_stringa( DbPrepared* self, int n, const char *valore );
 
 /**
  * Function: DbPrepared_sql_exec
@@ -243,7 +357,7 @@ void           DbPrepared_metti_parametro_stringa( DbPrepared* self, int n, cons
  * Returns:
  *   A true value if all is good and a false one if it's not.
  */
-lbool          DbPrepared_sql_exec( DbPrepared *self, lerror **error );
+lbool DbPrepared_sql_exec( DbPrepared *self, lerror **error );
 
 /**
  * Function: DbPrepared_sql_retrieve
@@ -257,7 +371,7 @@ lbool          DbPrepared_sql_exec( DbPrepared *self, lerror **error );
  * Returns:
  *    The iterator or NULL in the case of error.
  */
-DbIterator *   DbPrepared_sql_retrieve( DbPrepared *self, lerror **error );
+DbIterator *DbPrepared_sql_retrieve( DbPrepared *self, lerror **error );
 
 /**
  * Function: DbPrepared_sql_into
@@ -275,110 +389,32 @@ DbIterator *   DbPrepared_sql_retrieve( DbPrepared *self, lerror **error );
  *    query doesn't have only one row and one column this function will return an empty
  *    string. In other words, the last condition doesn't represent an error.
  */
-const char *   DbPrepared_sql_into( DbPrepared *self, lerror **error );
-
-const char *   DbPrepared_last_error( DbPrepared *self );
+const char *DbPrepared_sql_into( DbPrepared *self, lerror **error );
 
 /**
- * Class: DbConnection
- * 
- * This class represent an abstract database connection. You can
- * create you database connections using the appropriate
- * constructor functions.
- */
-
-typedef struct DbConnection DbConnection;
-typedef struct DbConnection_class DbConnection_class;
-
-struct DbConnection {
-    DbConnection_class *oClass;
-    lstring *lastError;
-    lstring *buffer;
-};
-
-struct DbConnection_class {
-    void (*destroy)( DbConnection *self );
-    int  (*sql_exec)( DbConnection *self, const char *sql, lerror **error );
-    DbIterator* (*sql_retrieve)( DbConnection *self, const char *sql, lerror **error );
-    DbPrepared* (*sql_prepare)( DbConnection *self, const char *sql, lerror **error );
-};
-
-void           DbConnection_init( DbConnection *self, DbConnection_class *oClass );
-const char *   DbConnection_last_error_message( DbConnection *self );
-
-/**
- * Function: DbConnection_destroy
+ * Function: DbPrepared_last_error
  *
- * Free this database connection
+ * Gives the last error message from the prepared query
  *
  * Parameters:
- *    self - The database connection. Can be NULL (does nothing)
- */
-void           DbConnection_destroy( DbConnection *self );
-
-/**
- * Function: DbConnection_sql_exec
- *
- * Execute a query in a DB connection discarding the result.
- *
- * Parameters:
- *    self  - The connection
- *    sql   - The query to execute
- *    error - The error object if you want to know the error message
+ *   self - The prepared statement
  *
  * Returns:
- *    A true value if the query run correctly or a false value if an error
- *    was thrown. The error object, if not NULL, is populated with the error
- *    message.
+ *   The latest error string
  */
-lbool          DbConnection_sql_exec( DbConnection *self, const char *sql, lerror **error );
+const char *DbPrepared_last_error( DbPrepared *self );
 
 /**
- * Function: DbConnection_sql_retrieve
+ * Function: DbPrepared_get_originating_connection
  *
- * Create an iterator pre-populated with the data selected from the query
- *
- * Parameters:
- *    self  - The connection
- *    sql   - The query to execute
- *    error - The error object if you want to know the error message
- *
- * Returns:
- *    The iterator or NULL in the case of error.
- */
-DbIterator *   DbConnection_sql_retrieve( DbConnection *self, const char *sql, lerror **error );
-
-/**
- * Function: DbConnection_sql_prepare
- *
- * Create a prepared query. Parameters must be represented by a "?".
+ * Get the originating connection of this prepared statement
  *
  * Parameters:
- *    self  - The connection.
- *    sql   - The query to execute
- *    error - The error object
+ *   self - The prepared statement
  *
  * Returns:
- *    The prepared query or NULL in error conditions.
+ *   The originating connection
  */
-DbPrepared *   DbConnection_sql_prepare( DbConnection *self, const char *sql, lerror **error );
-
-/**
- * Function: DbConnection_sql_into
- *
- * Execute a select and get a single result.
- *
- * Parameters:
- *    self  - The connection.
- *    sql   - The query to execute
- *    error - The error object
- *
- * Returns:
- *    The result as a string or NULL. If the result was a NULL you can an empty string.
- *    If there is an error condition this function will return NULL. If the result of the
- *    query doesn't have only one row and one column this function will return an empty
- *    string. In other words, the last condition doesn't represent an error.
- */
-const char *   DbConnection_sql_into( DbConnection *self, const char *sql, lerror **error );
+DbConnection *DbPrepared_get_originating_connection(DbPrepared *self);
 
 #endif

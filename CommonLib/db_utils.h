@@ -44,7 +44,7 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
  *    str - Destination lstring
  *    value - The string to escape (can be NULL)
  */
-void db_append_sql_escaped( lstring *str, const char *value );
+lstring* db_append_sql_escaped_f( lstring *str, const char *value );
 
 /**
  * Function: db_put_sql_format
@@ -54,7 +54,7 @@ void db_append_sql_escaped( lstring *str, const char *value );
  *     str - Destination lstring
  *     format - Format string
  */
-void db_put_sql_format( lstring *str, const char *format, ... );
+lstring* db_put_sql_format_f( lstring *str, const char *format, ... );
 
 /**
  * Function: db_append_sql_format
@@ -69,7 +69,7 @@ void db_put_sql_format( lstring *str, const char *format, ... );
  *     str - Destination lstring
  *     format - Format string
  */
-void db_append_sql_format( lstring *str, const char *format, ... );
+lstring* db_append_sql_format_f( lstring *str, const char *format, ... );
 
 /**
  * Function: db_compare_datetime

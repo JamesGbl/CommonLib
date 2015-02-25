@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "lerror.h"
 #include "lcross.h"
 #include "lmemory.h"
@@ -47,11 +43,11 @@ void lerror_set_internal( lerror **err, const char *domain, const char *message 
     l_assert( *err == NULL );
 
     *err = lmalloc( sizeof( struct lerror ) );
-    (*err)->message = _strdup( message );
+    (*err)->message = strdup( message );
     (*err)->stacktrace = lstring_new();
 
     if ( domain!=NULL ) {
-	(*err)->domain = _strdup( domain );
+	(*err)->domain = strdup( domain );
     } else {
 	(*err)->domain = NULL;
     }
@@ -126,22 +122,23 @@ void lerror_add_stack_internal( lerror **destination, const char *domain, const 
     l_assert( destination==NULL || *destination!=NULL );
 
     if ( destination!=NULL ) {
-	if ( domain!=NULL ) {
-	    lstring_append_cstr( (*destination)->stacktrace, domain );
-	    lstring_append_cstr( (*destination)->stacktrace, " - " );
-	}
-	lstring_append_cstr( (*destination)->stacktrace, location );
-	lstring_append_char( (*destination)->stacktrace, '\n' );
+		if ( domain!=NULL ) {
+			(*destination)->stacktrace = lstring_append_cstr_f( (*destination)->stacktrace, domain );
+			(*destination)->stacktrace = lstring_append_cstr_f( (*destination)->stacktrace, " - " );
+		}
+		(*destination)->stacktrace = lstring_append_cstr_f( (*destination)->stacktrace, location );
+		(*destination)->stacktrace = lstring_append_char_f( (*destination)->stacktrace, '\n' );
     }
 }
 
-void lerror_fill( lerror *error, lstring *str )    
+lstring *lerror_fill_f( lerror *error, lstring *str )    
 {
     l_assert( error!=NULL );
     l_assert( str!=NULL );
 
     lstring_truncate( str, 0 );
-    lstring_append_cstr( str, error->message );
-    lstring_append_cstr( str, "\n--\n" );
-    lstring_append_lstring( str, error->stacktrace );
+    str = lstring_append_cstr_f( str, error->message );
+    str = lstring_append_cstr_f( str, "\n--\n" );
+    str = lstring_append_cstr_f( str, error->stacktrace );
+	return str;
 }

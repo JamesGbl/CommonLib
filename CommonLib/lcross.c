@@ -42,14 +42,4 @@ uint16_t l_log2(uint32_t n) {
          n >>= 1;
      }
      return logValue;
-}
-
-#ifdef __unix__
-#include <signal.h>
-
-void l_break_to_debugger(void)
-{
-	raise(SIGINT);
-}
-#endif
-
+ }

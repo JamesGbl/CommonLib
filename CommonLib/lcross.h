@@ -35,6 +35,7 @@ For more information, please refer to <http://unlicense.org/>
 typedef int lbool;
 #define LFALSE (0)
 #define LTRUE (1)
+#define LNULL (0)
 
 /**
  * Function: l_stricmp 
@@ -55,12 +56,6 @@ int l_stricmp( const char *s1, const char *s2 );
  */
 uint16_t l_log2(uint32_t n);
 
-/**
- * Macro: l_break_to_debugger
- * Programmatic debugger breakpoint
- */
-void l_break_to_debugger(void);
-
 #define stringize_op1( x )              #x
 
 /**
@@ -72,11 +67,15 @@ void l_break_to_debugger(void);
 
 /**
  * Macro: l_assert
- * Assertion check. This check remains in the production code
+ * Assertion check. This check doesn't remain in the production code
  */
 #ifndef __MSC__
+#ifdef DEBUG
 #define l_assert(cond) \
     l_assert_internal( cond, __FUNCTION__, __FILE__, __LINE__ )
+#else
+#define l_assert(cond) {}
+#endif
 #else
 #define l_assert(cond) \
     l_assert_internal( cond, __func__, __FILE__, __LINE__ )

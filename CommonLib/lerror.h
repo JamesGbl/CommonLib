@@ -129,13 +129,13 @@ void lerror_delete( lerror **err );
 #endif
 
 /**
- * Function: lerror_fill
+ * Function: lerror_fill_f
  * Fill the string with informations from the error status
  * Parameters:
  *     error - The error (can't be NULL)
  *     str - The buffer (can't be NULL)
  */
-void lerror_fill( lerror *error, lstring *str );
+lstring* lerror_fill_f( lerror *error, lstring *str );
 
 
 lbool lerror_propagate_internal( lerror **destination, lerror *source, const char *domain, const char *location );

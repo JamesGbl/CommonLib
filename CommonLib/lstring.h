@@ -31,15 +31,17 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #ifndef __LSTRING_C_H
 #define __LSTRING_C_H
 
+#include "CommonLib/lcross.h"
+
 /**
  * Class: lstring
  * Yet another fancy string class
  */
-typedef struct lstring lstring;
+typedef char lstring;
+typedef struct lstring_header lstring_header;
 
-struct lstring
+struct lstring_header
 {
-	char *buf;
 	int len;
 	int bufLen;
 };
@@ -76,8 +78,11 @@ lstring *lstring_new_from_lstr( lstring* self );
  * Parameters:
  *     self - The lstring to clear (not NULL)
  *     other - The cstring to copy (not NULL)
+ *
+ * Returns:
+ *    The reallocated lstring
  */
-void lstring_from_cstr( lstring* str, const char *other );
+lstring* lstring_from_cstr_f( lstring* str, const char *other );
 
 /**
  * Function: lstring_from_lstr
@@ -87,8 +92,11 @@ void lstring_from_cstr( lstring* str, const char *other );
  * Parameters:
  *     self - The lstring to clear (not NULL)
  *     other - The cstring to copy (not NULL)
+ *
+ * Returns:
+ *    The reallocated lstring
  */
-void lstring_from_lstr( lstring* str, lstring *other );
+lstring* lstring_from_lstr_f( lstring* str, lstring *other );
 
 /**
  * Function: lstring_delete
@@ -107,7 +115,7 @@ void lstring_delete( lstring* str );
  *     str - The lstring (not NULL)
  *     other - The cstring to append (not NULL)
  */
-void lstring_append_cstr( lstring* str, const char *other );
+lstring* lstring_append_cstr_f( lstring* str, const char *other );
 
 /**
  * Function: lstring_append_lstring
@@ -117,7 +125,7 @@ void lstring_append_cstr( lstring* str, const char *other );
  *     str - The lstring (not NULL)
  *     other - The lstring to append (not NULL)
  */
-void lstring_append_lstring( lstring* str, lstring* other );
+lstring *lstring_append_lstring_f( lstring* str, lstring* other );
 
 /**
  * Function: lstring_append_char
@@ -127,16 +135,7 @@ void lstring_append_lstring( lstring* str, lstring* other );
  *     str - The lstring (not NULL)
  *     c - The char to append
  */
-void lstring_append_char( lstring* str, char c );
-
-/**
- * Function: lstring_to_cstr
- * Get the cstring out from this lstring
- *
- * Parameters:
- *     str - The lstring (not NULL)
- */
-const char *lstring_to_cstr( lstring* str );
+lstring* lstring_append_char_f( lstring* str, char c );
 
 /**
  * Function: lstring_reserve
@@ -146,7 +145,7 @@ const char *lstring_to_cstr( lstring* str );
  *     str - The lstring (not NULL)
  *     len - The new reserved space
  */
-void lstring_reserve( lstring* str, int len );
+lstring* lstring_reserve_f( lstring* str, int len );
 
 /**
  * Function: lstring_ltrim
@@ -266,11 +265,32 @@ int lstring_buffer_size( lstring *str );
 /*
 ** Aggiunge alla stringa
 */
-void lstring_append_generic( lstring* str, const char *other, int otherLen);
+lstring* lstring_append_generic_f( lstring* str, const char *other, int otherLen);
 
 /*
 ** Aggiunge alla stringa un preformattato sprintf
 */
-void lstring_append_sprintf( lstring *str, const char *format, ... );
+lstring* lstring_append_sprintf_f( lstring *str, const char *format, ... );
+
+/**
+ * Check for an empty string
+ * Params:
+ *   str - The lstring (not NULL)
+ */
+lbool lstring_empty(lstring *str);
+
+/**
+ * Check for the position of a character inside a string
+ *
+ * Params:
+ *   str - The lstring (not NULL)
+ *   startidx - Where to start searching
+ *   p - The character to search
+ *
+ * Returns:
+ *   -1 if the character was not found
+ *   the index of the character inside the string (0-based)
+ */
+int lstring_index_of_char(lstring *str, int startidx, char p);
 
 #endif

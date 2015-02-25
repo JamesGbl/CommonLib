@@ -35,9 +35,10 @@ For more information, please refer to <http://unlicense.org/>
 /* DbIterator
  * ========== */
 
-void DbIterator_init( DbIterator *self, DbIterator_class *oClass ) {
+void DbIterator_init( DbConnection *connection, DbIterator *self, DbIterator_class *oClass ) {
     l_assert( self!=NULL ); 
     self->oClass = oClass;
+	self->originatingConnection = connection;
 }
 
 void DbIterator_destroy( DbIterator *self ) {
@@ -71,12 +72,17 @@ const char * DbIterator_dammi_valore( DbIterator *self, int i ) {
     return self->oClass->dammi_valore( self, i );
 }
 
+DbConnection *DbIterator_get_originating_connection(DbIterator *self) {
+	l_assert(self!=NULL);
+	return self->originatingConnection;
+}
 
 /* DbPrepared
  * ========== */
 
-void DbPrepared_init( DbPrepared *self, DbPrepared_class *oClass ) {
+void DbPrepared_init( DbConnection *connection, DbPrepared *self, DbPrepared_class *oClass ) {
     self->oClass = oClass;
+	self->originatingConnection = connection;
     self->buffer = lstring_new();
     self->lastError = lstring_new();
 }
@@ -98,20 +104,20 @@ const char * DbPrepared_sql_into( DbPrepared *self, lerror **error ) {
     }
 
     if ( !DbIterator_prossima_riga( iter ) ) {
-        lstring_from_cstr( self->buffer, "" );
+        self->buffer = lstring_from_cstr_f( self->buffer, "" );
     } else if ( DbIterator_dammi_numero_campi( iter )!=1 ) {
-        lstring_from_cstr( self->buffer, "" );
+        self->buffer = lstring_from_cstr_f( self->buffer, "" );
     } else {
-        lstring_from_cstr( self->buffer, DbIterator_dammi_valore( iter, 0 ) );
+        self->buffer = lstring_from_cstr_f( self->buffer, DbIterator_dammi_valore( iter, 0 ) );
     }
 
     DbIterator_destroy( iter );
 
-    return lstring_to_cstr( self->buffer );
+    return self->buffer ;
 }
 
 const char * DbPrepared_last_error( DbPrepared *self ) {
-    return lstring_to_cstr( self->lastError );
+    return self->lastError;
 }
 
 int DbPrepared_dammi_numero_parametri( DbPrepared* self ) {
@@ -142,6 +148,11 @@ int DbPrepared_sql_exec( DbPrepared *self, lerror **error ) {
 DbIterator *DbPrepared_sql_retrieve( DbPrepared *self, lerror **error ) {
     l_assert( self!=NULL );
     return self->oClass->sql_retrieve( self, error );
+}
+
+DbConnection *DbPrepared_get_originating_connection(DbPrepared *self) {
+	l_assert(self!=NULL);
+	return self->originatingConnection;
 }
 
 /* DbConnection
@@ -185,17 +196,17 @@ const char * DbConnection_sql_into( DbConnection *self, const char *sql, lerror 
     }
 
     if ( !DbIterator_prossima_riga( iter ) ) {
-        lstring_from_cstr( self->buffer, "");
+        self->buffer = lstring_from_cstr_f( self->buffer, "");
     } else if ( DbIterator_dammi_numero_campi( iter )!=1 ) {
-        lstring_from_cstr( self->buffer, "");
+        self->buffer = lstring_from_cstr_f( self->buffer, "");
     } else {
-        lstring_from_cstr( self->buffer, DbIterator_dammi_valore( iter, 0 ) );
+        self->buffer = lstring_from_cstr_f( self->buffer, DbIterator_dammi_valore( iter, 0 ) );
     }
 
     DbIterator_destroy( iter );
-    return lstring_to_cstr( self->buffer );
+    return self->buffer;
 }
 
 const char * DbConnection_last_error_message( DbConnection *self ) {
-    return lstring_to_cstr( self->lastError );
+    return self->lastError;
 }

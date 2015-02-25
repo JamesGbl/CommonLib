@@ -3,34 +3,34 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-void db_append_sql_escaped( lstring *str, const char *value ) 
+lstring* db_append_sql_escaped_f( lstring *str, const char *value ) 
 {
     const char *c = NULL;
 
     l_assert( str!=NULL );
 
     if ( value==NULL ) {
-        lstring_append_cstr(str, "NULL");
-        return;
+        return lstring_append_cstr_f(str, "NULL");
     }
 
-    lstring_append_cstr(str, "\'" );
+    str = lstring_append_cstr_f(str, "\'" );
     
     c = value;
     while (*c) {
         switch(*c) {
         case '\'':
-            lstring_append_cstr(str, "\'\'" );
+            str = lstring_append_cstr_f(str, "\'\'" );
             break;
         default:
-            lstring_append_char(str, *c);
+            str = lstring_append_char_f(str, *c);
             break;
         }
         
         c++;
     }
     
-    lstring_append_cstr(str, "\'" );
+    str = lstring_append_cstr_f(str, "\'" );
+	return str;
 }
 
 int db_compare_datetime( const char *first, const char *second ) 
@@ -72,7 +72,7 @@ static lbool db_is_keyword( const char *str ) {
     return LFALSE;
 }
 
-static void db_append_sql_format_v( lstring *str, const char *format, va_list args ) {
+static lstring* db_append_sql_format_vf( lstring *str, const char *format, va_list args ) {
     const char *tmp = NULL;
     lbool is_keyword = LFALSE;
 
@@ -81,30 +81,32 @@ static void db_append_sql_format_v( lstring *str, const char *format, va_list ar
 
     while( (*format)!='\0' ) {
         if ( (*format)!='%' ) {
-            lstring_append_char( str, *format );
+            str = lstring_append_char_f( str, *format );
             format++;
         } else if ( (*(format+1))=='s' ) {
-            db_append_sql_escaped( str, va_arg(args, const char *) );
+            str = db_append_sql_escaped_f( str, va_arg(args, const char *) );
             format += 2;
         } else if ( (*(format+1))=='i' ) {
-            lstring_append_sprintf( str, "%i", va_arg(args, int) );
+            str = lstring_append_sprintf_f( str, "%i", va_arg(args, int) );
             format += 2;
         } else if ( (*(format+1))=='k' ) {
-            lstring_append_cstr( str, va_arg(args, const char *) );
+            str = lstring_append_cstr_f( str, va_arg(args, const char *) );
             format += 2;
         } else if ( (*(format+1))=='m' ) {
 
             tmp = va_arg(args, const char *);
             is_keyword = db_is_keyword( tmp );
-            if ( is_keyword ) lstring_append_char( str, '\"');
-            lstring_append_cstr( str, tmp );
-            if ( is_keyword ) lstring_append_char( str, '\"');
+            if ( is_keyword ) str = lstring_append_char_f( str, '\"');
+            str = lstring_append_cstr_f( str, tmp );
+            if ( is_keyword ) str = lstring_append_char_f( str, '\"');
             format += 2;
         }
     }
+
+	return str;
 }
 
-void db_put_sql_format( lstring *str, const char *format, ... ) {
+lstring* db_put_sql_format_f( lstring *str, const char *format, ... ) {
     va_list args;
 
     l_assert( str!=NULL );
@@ -113,17 +115,21 @@ void db_put_sql_format( lstring *str, const char *format, ... ) {
     lstring_truncate( str, 0 );
 
     va_start( args, format );
-    db_append_sql_format_v( str, format, args );
+    str = db_append_sql_format_vf( str, format, args );
     va_end( args );
+
+	return str;
 }
 
-void db_append_sql_format( lstring *str, const char *format, ... ) {
+lstring* db_append_sql_format_f( lstring *str, const char *format, ... ) {
     va_list args;
 
     l_assert( str!=NULL );
     l_assert( format!=NULL );
 
     va_start( args, format );
-    db_append_sql_format_v( str, format, args );
+    str = db_append_sql_format_vf( str, format, args );
     va_end( args );
+
+	return str;
 }
