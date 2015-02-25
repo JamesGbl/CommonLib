@@ -41,11 +41,11 @@ struct SqlHelper {
 };
 
 SqlHelper *SqlHelper_init( const char *nomeTabella ) {
-    SqlHelper *self = lmalloc( sizeof(SqlHelper) );
+	SqlHelper *self = (SqlHelper *)lmalloc( sizeof(SqlHelper) );
 
     self->query = lstring_new_from_cstr( "INSERT INTO " );
-    lstring_append_cstr( self->query, nomeTabella );
-    lstring_append_cstr( self->query, " (" );
+    self->query = lstring_append_cstr_f( self->query, nomeTabella );
+    self->query = lstring_append_cstr_f( self->query, " (" );
 
     self->quantiCampi = 0;
 
@@ -56,9 +56,9 @@ SqlHelper *SqlHelper_init( const char *nomeTabella ) {
 
 void SqlHelper_aggiungi_campo( SqlHelper *self, const char *nomeCampo ) {
     if ( !lstring_ends_with_cstr( self->query, "," ) && !lstring_ends_with_cstr( self->query, "(" ) ) {
-        lstring_append_cstr( self->query, "," );
+        self->query = lstring_append_cstr_f( self->query, "," );
     }
-    lstring_append_cstr( self->query, nomeCampo );
+    self->query = lstring_append_cstr_f( self->query, nomeCampo );
 
     self->quantiCampi = self->quantiCampi + 1;
 }
@@ -66,18 +66,18 @@ void SqlHelper_aggiungi_campo( SqlHelper *self, const char *nomeCampo ) {
 const char *SqlHelper_to_insert( SqlHelper *self ) {
     int i;
 
-    lstring_from_cstr( self->buffer, lstring_to_cstr( self->query ) );
-    lstring_append_cstr( self->buffer, ") VALUES (" );
+    self->buffer = lstring_from_cstr_f( self->buffer, self->query );
+    self->buffer = lstring_append_cstr_f( self->buffer, ") VALUES (" );
 
     for ( i=0; i<self->quantiCampi; i++ ) {
         if ( i!=0 ) {
-            lstring_append_cstr( self->buffer, "," );
+            self->buffer = lstring_append_cstr_f( self->buffer, "," );
         }
-        lstring_append_cstr( self->buffer, "?" );
+        self->buffer = lstring_append_cstr_f( self->buffer, "?" );
     }
 
-    lstring_append_cstr( self->buffer, ")" );
-    return lstring_to_cstr( self->buffer );
+    self->buffer = lstring_append_cstr_f( self->buffer, ")" );
+    return self->buffer;
 }
 
 void SqlHelper_destroy( SqlHelper *self ) {

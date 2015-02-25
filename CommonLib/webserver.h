@@ -126,6 +126,6 @@ void webresp_write_text_len( struct webresponse_t *conn, const char *txt, int le
  * Function: webreq_get_param
  * Get a parameter from an HTTP request
  */
-void webreq_get_param( struct webrequest_t *req, lstring *dest, const char *paramName );
+lstring *webreq_get_param_f( struct webrequest_t *req, lstring *dest, const char *paramName );
 
 #endif

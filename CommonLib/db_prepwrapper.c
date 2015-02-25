@@ -68,12 +68,12 @@ static int PrepWrapper_dammi_numero_parametri( DbPrepared *parent ) {
 
 static void PrepWrapper_metti_parametro_intero( DbPrepared *parent, int n, int valore ) {
     PrepWrapper *self = (PrepWrapper *)parent;
-    lstring *parametro = (lstring*)lvector_at( self->parametriCorrenti, valore );
+    lstring *parametro = (lstring*)lvector_at( self->parametriCorrenti, n );
     char buffer[64];
 
     if ( parametro==NULL ) return;
-    sprintf( buffer, "%i", n );
-    lstring_from_cstr( parametro, buffer );
+    sprintf( buffer, "%i", valore );
+	lvector_set(self->parametriCorrenti, n, lstring_from_cstr_f( parametro, buffer ));
 }
 
 static void PrepWrapper_metti_parametro_nullo( DbPrepared *parent, int n ) {
@@ -81,7 +81,7 @@ static void PrepWrapper_metti_parametro_nullo( DbPrepared *parent, int n ) {
     lstring *valore = (lstring*)lvector_at( self->parametriCorrenti, n );
 
     if ( valore==NULL ) return;
-    lstring_from_cstr( valore, "NULL" );
+	lvector_set(self->parametriCorrenti, n, lstring_from_cstr_f( valore, "NULL" ));
 }
 
 static void PrepWrapper_metti_parametro_stringa( DbPrepared *parent, int n, const char *valore ) {
@@ -100,33 +100,32 @@ static void PrepWrapper_metti_parametro_stringa( DbPrepared *parent, int n, cons
     len = strlen( valore );
 
     lstring_truncate( parametro, 0 );
-    lstring_append_char( parametro, '\'' );
+    parametro = lstring_append_char_f( parametro, '\'' );
     for (i=0; i<len; i++) {
         if ( valore[i]=='\'' ) {
-            lstring_append_cstr( parametro, "\'\'" );
+            parametro = lstring_append_cstr_f( parametro, "\'\'" );
         } else {
-            lstring_append_char( parametro, valore[i] );
+            parametro = lstring_append_char_f( parametro, valore[i] );
         }
     }
-    lstring_append_char( parametro, '\'' );
+    parametro = lstring_append_char_f( parametro, '\'' );
+	lvector_set(self->parametriCorrenti, n, parametro);
 }
 
 static void PrepWrapper_ricalcola_sql( PrepWrapper *self ) {
     int len, nParametro, i;
-    const char *sql;
 
     if ( self==NULL ) return;
     lstring_reset( self->sqlDaEseguire );
 
     len = lstring_len( self->sql );
-    sql = lstring_to_cstr( self->sql );
     nParametro = 0;
     for ( i=0; i<len; i++ ) {
-        if ( sql[i]=='?' ) {
-            lstring_append_lstring( self->sqlDaEseguire, (lstring*)lvector_at( self->parametriCorrenti, nParametro ) );
+        if ( self->sql[i]=='?' ) {
+            self->sqlDaEseguire = lstring_append_lstring_f( self->sqlDaEseguire, (lstring*)lvector_at( self->parametriCorrenti, nParametro ) );
             nParametro++;
         } else {
-            lstring_append_char( self->sqlDaEseguire, sql[i] );
+            self->sqlDaEseguire = lstring_append_char_f( self->sqlDaEseguire, self->sql[i] );
         }
     }
 }
@@ -137,7 +136,7 @@ static int PrepWrapper_sql_exec( DbPrepared* parent, lerror **error ) {
     self = (PrepWrapper *)parent; 
     PrepWrapper_ricalcola_sql( self );
 
-    return DbConnection_sql_exec( self->origDc, lstring_to_cstr( self->sqlDaEseguire ), error );
+    return DbConnection_sql_exec( self->origDc, self->sqlDaEseguire, error );
 }
 
 static DbIterator * PrepWrapper_sql_retrieve( DbPrepared* parent, lerror **error ) {
@@ -146,7 +145,7 @@ static DbIterator * PrepWrapper_sql_retrieve( DbPrepared* parent, lerror **error
     self = (PrepWrapper *)parent; 
     PrepWrapper_ricalcola_sql( self );
 
-    return DbConnection_sql_retrieve( self->origDc, lstring_to_cstr( self->sqlDaEseguire ), error );
+    return DbConnection_sql_retrieve( self->origDc, self->sqlDaEseguire, error );
 }
 
 DbPrepared *PrepWrapper_For( DbConnection* dc, const char *sql ) {
@@ -163,15 +162,15 @@ DbPrepared *PrepWrapper_For( DbConnection* dc, const char *sql ) {
     oClass.sql_exec = PrepWrapper_sql_exec;
     oClass.sql_retrieve = PrepWrapper_sql_retrieve;
 
-    self = lmalloc( sizeof(struct PrepWrapper) );
-    DbPrepared_init( (DbPrepared*)self, &oClass );
+	self = (PrepWrapper *)lmalloc( sizeof(struct PrepWrapper) );
+    DbPrepared_init(dc, (DbPrepared*)self, &oClass );
 
     self->origDc = dc;
     self->sql = lstring_new_from_cstr( sql );
     self->sqlDaEseguire = lstring_new();
 
     len = lstring_len( self->sql );
-    sql = lstring_to_cstr( self->sql );
+    sql = self->sql;
     quantiParametri = 0;
     for ( i=0; i<len; i++ ) {
         if ( sql[i]=='?' ) quantiParametri++;

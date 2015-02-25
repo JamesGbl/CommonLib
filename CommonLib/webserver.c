@@ -89,7 +89,7 @@ void webreq_destroy( struct webrequest_t *self ) {
     }
 }
 
-void webreq_get_param( struct webrequest_t *req, lstring *dest, const char *paramName ) {
+lstring* webreq_get_param_f( struct webrequest_t *req, lstring *dest, const char *paramName ) {
     char buffer[1024];
     size_t bufferLen = 1024;
     int status = 0;
@@ -101,7 +101,7 @@ void webreq_get_param( struct webrequest_t *req, lstring *dest, const char *para
     if ( req->info->query_string==NULL ) {
         /* not found */
         lstring_truncate( dest, 0 );
-        return;
+        return NULL;
     }
 
     status = mg_get_var(req->info->query_string, strlen(req->info->query_string),
@@ -113,8 +113,10 @@ void webreq_get_param( struct webrequest_t *req, lstring *dest, const char *para
         /* no sufficient space */
         lstring_truncate( dest, 0 );
     } else {
-        lstring_from_cstr( dest, buffer );
+        dest = lstring_from_cstr_f( dest, buffer );
     }
+
+	return dest;
 }
 
 /* }}} */
@@ -157,13 +159,13 @@ int webresp_get_http_status( struct webresponse_t *self ) {
 
 void webresp_set_http_status_description( struct webresponse_t *self, const char *status_desc ) {
     l_assert( self!=NULL && status_desc!=NULL );
-    lstring_from_cstr( self->http_status_desc, status_desc );
+    self->http_status_desc = lstring_from_cstr_f( self->http_status_desc, status_desc );
 }
 
 void webresp_set_content_type( struct webresponse_t *self, const char *content_type ) {
     l_assert( self!=NULL );
     l_assert( content_type!=NULL && content_type!=NULL );
-    lstring_from_cstr( self->content_type, content_type );
+    self->content_type = lstring_from_cstr_f( self->content_type, content_type );
 }
 
 void webresp_write_text( struct webresponse_t *conn, const char *txt )
@@ -175,7 +177,7 @@ void webresp_write_text( struct webresponse_t *conn, const char *txt )
 void webresp_write_lstring( struct webresponse_t *conn, lstring *txt ) 
 {
     l_assert( conn!=NULL && txt!=NULL );
-    MemBuffer_write( conn->buffer, (void *)txt->buf, txt->len );
+    MemBuffer_write( conn->buffer, (void *)txt, lstring_len(txt) );
 }
 
 void webresp_write_text_len( struct webresponse_t *conn, const char *txt, int len )
@@ -193,8 +195,8 @@ static void webresp_commit( struct webresponse_t *conn )
                "Content-Length: %d\r\n" // Always set Content-Length
                "\r\n"
                "%s",
-               conn->http_status, conn->http_status_desc->buf, 
-               conn->content_type->buf, 
+               conn->http_status, conn->http_status_desc, 
+               conn->content_type, 
                MemBuffer_len(conn->buffer), 
                MemBuffer_address(conn->buffer));
 }
@@ -217,7 +219,7 @@ struct webserver_t *webserver_new( const char *address, const char *port, int n_
     result->port = lstring_new_from_cstr( port );
     result->rules_count = 0;
     result->n_threads = lstring_new();
-    lstring_append_sprintf( result->n_threads, "%i", n_threads);
+    result->n_threads = lstring_append_sprintf_f( result->n_threads, "%i", n_threads);
 
     return result;
 }
@@ -238,7 +240,7 @@ static int handle_rule( struct webserver_t *self, struct rules_t *rule, struct m
     rule->handler( rule->ctx, webreq, webresp, &my_error );
     if ( my_error!=NULL ) {
         data = lstring_new();
-        lerror_fill( my_error, data );
+        data = lerror_fill_f( my_error, data );
 
         webresp_write_lstring( webresp, data );
         webresp_set_http_status( webresp, 500 );
@@ -262,7 +264,7 @@ static int request_handler( struct mg_connection *conn ) {
     l_assert( self!=NULL );
 
     for ( i=0; i<self->rules_count; i++ ) {
-        if ( 0==strcmp( info->uri, self->rules[i].uri->buf) ) {
+        if ( 0==strcmp( info->uri, self->rules[i].uri) ) {
             return handle_rule( self, &self->rules[i], conn );
         }
     }
@@ -272,9 +274,9 @@ static int request_handler( struct mg_connection *conn ) {
 
 void webserver_start( struct webserver_t *self, lerror **error ) {
     const char *options[] = {
-        "document_root", self->docRoot->buf,
-        "listening_ports", self->port->buf, 
-        "num_threads", self->n_threads->buf,
+        "document_root", self->docRoot,
+        "listening_ports", self->port, 
+        "num_threads", self->n_threads,
         NULL
     };
 

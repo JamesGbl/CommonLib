@@ -55,7 +55,7 @@ struct JsonBuffer
 
 JsonBuffer* JsonBuffer_new() 
 {
-    JsonBuffer *self = lmalloc(sizeof(JsonBuffer));
+	JsonBuffer *self = (JsonBuffer *)lmalloc(sizeof(JsonBuffer));
     self->internal = lstring_new();
 	self->indentFlag = LFALSE;
 	self->currentIndentLevel = 0;
@@ -83,10 +83,10 @@ static void JsonBuffer_newLineAndIndent(JsonBuffer *self)
 	l_assert(self!=NULL);
 	if (self->currentIndentLevel<0) return;
 
-	lstring_append_char(self->internal, '\n');
+	self->internal = lstring_append_char_f(self->internal, '\n');
 	for (i=0; i<self->currentIndentLevel; i++)
 	{
-		lstring_append_char(self->internal, '\t');
+		self->internal = lstring_append_char_f(self->internal, '\t');
 	}
 }
 
@@ -100,7 +100,7 @@ void JsonBuffer_destroy( JsonBuffer *self )
 
 void JsonBuffer_startList( JsonBuffer *self ) 
 {
-    lstring_append_cstr( self->internal, "[" );
+    self->internal = lstring_append_cstr_f( self->internal, "[" );
 
 	if (self->indentFlag)
 	{
@@ -117,12 +117,12 @@ void JsonBuffer_endList( JsonBuffer *self )
 		JsonBuffer_newLineAndIndent(self);
 	}
 
-    lstring_append_cstr( self->internal, "]" );
+    self->internal = lstring_append_cstr_f( self->internal, "]" );
 }
 
 void JsonBuffer_startObject( JsonBuffer *self ) 
 {
-    lstring_append_cstr( self->internal, "{" );
+    self->internal = lstring_append_cstr_f( self->internal, "{" );
 
 	if (self->indentFlag)
 	{
@@ -139,13 +139,13 @@ void JsonBuffer_endObject( JsonBuffer *self )
 		JsonBuffer_newLineAndIndent(self);
 	}
 
-    lstring_append_cstr( self->internal, "}" );
+    self->internal = lstring_append_cstr_f( self->internal, "}" );
 }
 
 void JsonBuffer_writePropertyName( JsonBuffer *self, const char *name ) 
 {
     JsonBuffer_writeString( self, name );
-    lstring_append_cstr( self->internal, ":" );
+    self->internal = lstring_append_cstr_f( self->internal, ":" );
 }
 
 void JsonBuffer_writeString( JsonBuffer *self, const char *str ) 
@@ -165,22 +165,22 @@ void JsonBuffer_writeString( JsonBuffer *self, const char *str )
         wstring = string1252ToWChar( str );
         lunghezza = wcslen( wstring );
 
-        lstring_append_char( self->internal, '\"' );
+        self->internal = lstring_append_char_f( self->internal, '\"' );
         for( i=0; i<lunghezza; i++ ) {
             if ( wstring[i]>255 || !isprint(wstring[i]) ) {
                 char buffer[7];
                 snprintf( buffer, 7, "\\u%04x", wstring[i]);
-                lstring_append_cstr( self->internal, buffer );
+                self->internal = lstring_append_cstr_f( self->internal, buffer );
             } else if ( wstring[i]=='\"' ) {
-                lstring_append_cstr( self->internal, "\\\"" );
+                self->internal = lstring_append_cstr_f( self->internal, "\\\"" );
             } else if ( wstring[i]=='\\' ) {
-                lstring_append_cstr( self->internal, "\\\\" );
+                self->internal = lstring_append_cstr_f( self->internal, "\\\\" );
             } else {
                 char c = (char)wstring[i];
-                lstring_append_char( self->internal, c );
+                self->internal = lstring_append_char_f( self->internal, c );
             }
         }
-        lstring_append_char( self->internal, '\"' );
+        self->internal = lstring_append_char_f( self->internal, '\"' );
 
         lfree( wstring );
     }
@@ -188,22 +188,22 @@ void JsonBuffer_writeString( JsonBuffer *self, const char *str )
 
 void JsonBuffer_writeNull( JsonBuffer *self ) 
 {
-    lstring_append_cstr( self->internal, "null" );
+    self->internal = lstring_append_cstr_f( self->internal, "null" );
 }
 
 void JsonBuffer_writeTrue( JsonBuffer *self ) 
 {
-    lstring_append_cstr( self->internal, "true" );
+    self->internal = lstring_append_cstr_f( self->internal, "true" );
 }
 
 void JsonBuffer_writeFalse( JsonBuffer *self ) 
 {
-    lstring_append_cstr( self->internal, "false" );
+    self->internal = lstring_append_cstr_f( self->internal, "false" );
 }
 
 void JsonBuffer_writeSeparator( JsonBuffer *self ) 
 {
-    lstring_append_char( self->internal, ',' );
+    self->internal = lstring_append_char_f( self->internal, ',' );
 
 	if (self->indentFlag)
 	{
@@ -218,7 +218,7 @@ int JsonBuffer_size( JsonBuffer *self )
 
 const char * JsonBuffer_get( JsonBuffer *self ) 
 {
-    return lstring_to_cstr( self->internal );
+    return self->internal;
 }
 
 void JsonBuffer_writeInt(JsonBuffer *self, int val)
@@ -227,7 +227,7 @@ void JsonBuffer_writeInt(JsonBuffer *self, int val)
 
 	l_assert(self!=NULL);
 	sprintf(space, "%i", val);
-	lstring_append_cstr(self->internal, space);
+	self->internal = lstring_append_cstr_f(self->internal, space);
 }
 
 void JsonBuffer_writeBool(JsonBuffer *self, lbool value)
