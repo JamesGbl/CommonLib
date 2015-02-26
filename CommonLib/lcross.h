@@ -31,6 +31,7 @@ For more information, please refer to <http://unlicense.org/>
 */ 
 
 #include <stdint.h>
+#include <stdarg.h>
 
 typedef int lbool;
 #define LFALSE (0)
@@ -49,6 +50,36 @@ typedef int lbool;
  *     As strcmp
  */
 int l_stricmp( const char *s1, const char *s2 );
+
+/**
+ * Function: l_strdup
+ * Cross-compiler version of strdup
+ */
+char *l_strdup(const char *d);
+
+/**
+ * Function: l_strcpy
+ * Cross-compiler version of strcpy
+ */
+void l_strcpy(char *d, const char *s);
+
+/**
+ * Function: l_strcat
+ * Cross-compiler version of strcat
+ */
+void l_strcat(char *d, const char *s);
+
+/**
+ * Function: l_vsnprintf
+ * Cross-compiler version of vsnprintf
+ */
+void l_vsnprintf(char *d, int len, const char *format, va_list args);
+
+/**
+ * Function: l_stricmp
+ * Cross-compiler version of stricmp
+ */
+int l_stricmp(const char *s, const char *m);
 
 /**
  * Function: l_log2

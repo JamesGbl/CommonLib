@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdio.h>
 
 int l_stricmp( const char *s1, const char *s2 ) {
     char c1, c2;
@@ -43,3 +45,35 @@ uint16_t l_log2(uint32_t n) {
      }
      return logValue;
  }
+
+char *l_strdup(const char *d) {
+#ifdef _WIN32
+	return _strdup(d);
+#else
+	return strdup(d);
+#endif
+}
+
+void l_strcpy(char *d, const char *s) {
+#ifdef _WIN32
+	strcpy_s(d, strlen(s)+1, s);
+#else
+	strcpy(d, s);
+#endif
+}
+
+void l_strcat(char *d, const char *s) {
+#ifdef _WIN32
+	strcat_s(d, strlen(s)+1, s);
+#else
+	strcat(d, s);
+#endif
+}
+
+void l_vsnprintf(char *d, int len, const char *format, va_list args) {
+#ifdef _WIN32
+	vsnprintf_s(d, len, _TRUNCATE, format, args);
+#else
+	vsnprintf(d, len, format, args);
+#endif
+}
