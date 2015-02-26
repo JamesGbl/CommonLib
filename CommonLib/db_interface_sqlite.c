@@ -254,6 +254,18 @@ DbConnection *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
 	return (DbConnection *)self;
 }
 
+DbConnection_Sqlite *DbConnection_Sqlite_new_mem_shared(const char *dbname) {
+	DbConnection_Sqlite *result = NULL;
+	lstring *databaseUri = lstring_new();
+
+	databaseUri = lstring_append_cstr_f(databaseUri, "file:");
+	databaseUri = lstring_append_cstr_f(databaseUri, dbname);
+	databaseUri = lstring_append_cstr_f(databaseUri, "?mode=memory&cache=shared");
+	result = (DbConnection_Sqlite *)DbConnection_Sqlite_new(databaseUri, NULL);
+
+	return result;
+}
+
 DbConnection *DbConnection_Sqlite_new_mem( void ) {
 	return DbConnection_Sqlite_new( ":memory:", NULL );
 }

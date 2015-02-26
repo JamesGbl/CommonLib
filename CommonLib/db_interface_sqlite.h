@@ -60,6 +60,22 @@ DbConnection_Sqlite *DbConnection_Sqlite_new( const char *fileName, lerror **err
 DbConnection_Sqlite *DbConnection_Sqlite_new_mem( void );
 
 /**
+ * Function: DbConnection_Sqlite_new_mem_shared
+ *
+ * Create a connection to a SQLite memory database with a shared
+ * cache. With this function you can create multiple connections 
+ * to the same memory database which in not discarded until
+ * there is an open connection.
+ *
+ * Parameters:
+ *     dbname - The name of the memory database
+ *
+ * Returns:
+ *     The connection
+ */
+DbConnection_Sqlite *DbConnection_Sqlite_new_mem_shared(const char *dbname);
+
+/**
  * Function: DbConnection_Sqlite_get_handle
  *
  * Get the internal SQLite handle of this data connection. This function
