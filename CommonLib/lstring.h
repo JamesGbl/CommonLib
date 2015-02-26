@@ -31,7 +31,7 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #ifndef __LSTRING_C_H
 #define __LSTRING_C_H
 
-#include "CommonLib/lcross.h"
+#include "lcross.h"
 
 /**
  * Class: lstring

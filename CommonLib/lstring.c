@@ -60,7 +60,7 @@ lstring* lstring_new_from_cstr( const char *cstr )
 	lstring* s = ((char *)str)+sizeof(lstring_header);
 	str->len = len;
 	str->bufLen = bufLen - sizeof(struct lstring_header);
-	strcpy(s, cstr);
+	l_strcpy(s, cstr);
     return s;
 }    
 
@@ -460,7 +460,7 @@ lstring* lstring_append_sprintf_f( lstring *str, const char *format, ... ) {
     char buffer[512];
 
     va_start( args, format );
-    vsnprintf( buffer, 511, format, args );
+    l_vsnprintf( buffer, 511, format, args );
     va_end( args );
 
     buffer[511] = '0';

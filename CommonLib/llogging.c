@@ -1,6 +1,7 @@
 #include "llogging.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include "lcross.h"
 
 /*
 About: License
@@ -54,7 +55,7 @@ static const char *level_to_string( enum LoggingLevel level ) {
 static void l_internal_log( const char *domain, enum LoggingLevel level, const char *format, va_list args ) {
     char logMessage[2048];
 
-    vsnprintf( logMessage, 2047, format, args );
+    l_vsnprintf( logMessage, 2047, format, args );
 
     fputs( level_to_string( level ), stderr );
     fputs( " - ", stderr );

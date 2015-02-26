@@ -42,12 +42,12 @@ void lerror_set_internal( lerror **err, const char *domain, const char *message 
     l_assert( message!=NULL );
     l_assert( *err == NULL );
 
-    *err = lmalloc( sizeof( struct lerror ) );
-    (*err)->message = strdup( message );
+    *err = (lerror *)lmalloc( sizeof( struct lerror ) );
+    (*err)->message = l_strdup( message );
     (*err)->stacktrace = lstring_new();
 
     if ( domain!=NULL ) {
-	(*err)->domain = strdup( domain );
+	(*err)->domain = l_strdup( domain );
     } else {
 	(*err)->domain = NULL;
     }
@@ -72,7 +72,7 @@ void lerror_set_sprintf_internal( lerror **err, const char *domain, const char *
     l_assert( message!=NULL );
 
     va_start( args, message );
-    vsnprintf( buffer, 2048, message, args );
+    l_vsnprintf( buffer, 2048, message, args );
     va_end( args );
 
     buffer[2047] = '0';
@@ -89,10 +89,10 @@ void lerror_add_prefix_internal( lerror **err, const char *prefix ) {
 
     l_assert( *err!=NULL );
 
-    buffer = calloc( 1, strlen(prefix) + strlen((*err)->message) + 16 );
-    strcpy( buffer, prefix );
-    strcat( buffer, " - " );
-    strcat( buffer, (*err)->message );
+    buffer = (char *)calloc( 1, strlen(prefix) + strlen((*err)->message) + 16 );
+    l_strcpy( buffer, prefix );
+    l_strcat( buffer, " - " );
+    l_strcat( buffer, (*err)->message );
 
     lfree( (*err)->message );
     (*err)->message = buffer;
