@@ -29,9 +29,13 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 */ 
 
 #include "db_utils.h"
+#include "separatore_query.h"
 #include "lcross.h"
 #include <stddef.h>
 #include <stdarg.h>
+
+static lstring* db_append_sql_format_vf( lstring *str, const char *format, va_list args );
+static lbool db_is_keyword( const char *str );
 
 lstring* db_append_sql_escaped_f( lstring *str, const char *value ) 
 {
@@ -83,6 +87,64 @@ int db_compare_datetime( const char *first, const char *second )
     return result;
 }
 
+lstring* db_put_sql_format_f( lstring *str, const char *format, ... ) {
+    va_list args;
+
+    l_assert( str!=NULL );
+    l_assert( format!=NULL );
+
+    lstring_truncate( str, 0 );
+
+    va_start( args, format );
+    str = db_append_sql_format_vf( str, format, args );
+    va_end( args );
+
+	return str;
+}
+
+lstring* db_append_sql_format_f( lstring *str, const char *format, ... ) {
+    va_list args;
+
+    l_assert( str!=NULL );
+    l_assert( format!=NULL );
+
+    va_start( args, format );
+    str = db_append_sql_format_vf( str, format, args );
+    va_end( args );
+
+	return str;
+}
+
+void db_execute_sql_script(DbConnection *conndb, const char *sql_script, lerror **error) {
+	const char *prossima = NULL;
+	lstring *sql = NULL;
+	lerror *myError = NULL;
+
+	l_assert(sql_script!=NULL);
+	l_assert(error==NULL || *error==NULL);
+
+	sql = lstring_new();
+
+	while(sql_script!=NULL) {
+		prossima = DB_prossima_query(sql_script);
+		lstring_reset(sql);
+
+		sql = lstring_append_generic_f(sql, sql_script, prossima-sql_script);
+		if ( (*prossima) == '\x0' ) {
+			sql_script = NULL;
+		} else {
+			sql_script = prossima + 1;
+		}
+
+		DbConnection_sql_exec(conndb, sql, &myError);
+		if (lerror_propagate(error, myError)) break;
+
+	}
+
+	lstring_delete(sql);
+}
+
+
 static lbool db_is_keyword( const char *str ) {
     l_assert( str!=NULL );
 
@@ -132,34 +194,6 @@ static lstring* db_append_sql_format_vf( lstring *str, const char *format, va_li
             format += 2;
         }
     }
-
-	return str;
-}
-
-lstring* db_put_sql_format_f( lstring *str, const char *format, ... ) {
-    va_list args;
-
-    l_assert( str!=NULL );
-    l_assert( format!=NULL );
-
-    lstring_truncate( str, 0 );
-
-    va_start( args, format );
-    str = db_append_sql_format_vf( str, format, args );
-    va_end( args );
-
-	return str;
-}
-
-lstring* db_append_sql_format_f( lstring *str, const char *format, ... ) {
-    va_list args;
-
-    l_assert( str!=NULL );
-    l_assert( format!=NULL );
-
-    va_start( args, format );
-    str = db_append_sql_format_vf( str, format, args );
-    va_end( args );
 
 	return str;
 }

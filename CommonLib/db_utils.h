@@ -37,6 +37,8 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
  * File: db_utils.h
  */
 
+#include "db_interface.h"
+
 /**
  * Function: db_append_sql_escaped
  * Append to a query an escaped string param
@@ -86,5 +88,17 @@ lstring* db_append_sql_format_f( lstring *str, const char *format, ... );
  *    -1 if first>second, 0 if first==second, 1 if first<second
  */
 int db_compare_datetime( const char *first, const char *second );
+
+/**
+ * Function: db_execute_sql_script
+ *
+ * Execute a SQL script splitting it on individual SQL instructions and
+ * forwarding them, one by one, to the DBMS.
+ *
+ * Parameters:
+ *    conndb - The connection where to execute the queries
+ *    sql_script - The SQL script
+ */
+void db_execute_sql_script(DbConnection *conndb, const char *sql_script, lerror **error);
 
 #endif
