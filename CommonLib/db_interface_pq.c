@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org/>
 #include <string.h>
 #include <stdlib.h>
 #include "lcross.h"
+#include "lmemory.h"
 #include <libpq-fe.h>
 
 /**
@@ -96,11 +97,11 @@ static lbool DbIteratorPq_controlla_valore_nullo( DbIterator *parent, int i ) {
     return PQgetisnull( self->res, self->recNo, i );
 }
 
-static DbIterator *crea_iteratore_pq_per( PGresult *res, int shared ) {
+static DbIterator *crea_iteratore_pq_per( DbConnection *originatingConnection, PGresult *res, int shared ) {
     static DbIterator_class oClass;
     DbIterator_Pq *self = NULL;
 
-    self = lmalloc( sizeof( DbIterator_Pq ) );
+    self = (DbIterator_Pq *)lmalloc( sizeof( DbIterator_Pq ) );
     oClass.destroy = DbIteratorPq_destroy;
     oClass.dammi_numero_campi = DbIteratorPq_dammi_numero_campi;
     oClass.dammi_nome_campo = DbIteratorPq_dammi_nome_campo;
@@ -112,7 +113,7 @@ static DbIterator *crea_iteratore_pq_per( PGresult *res, int shared ) {
     self->shared = shared;
     self->recNo = -1;
 
-    DbIterator_init( (DbIterator *)self, &oClass );
+    DbIterator_init( (DbConnection *)originatingConnection, (DbIterator*)self, &oClass );
     return (DbIterator *)self;
 }
 
@@ -129,7 +130,7 @@ struct DbPrepared_Pq {
     int quantiParametri;
 };
 
-void normalizzaParametriPg( lstring *result, const char *sql, int *quantiParametri ) {
+static lstring* normalizzaParametriPg_f( lstring *result, const char *sql, int *quantiParametri ) {
     /* questa e' una normalizzazione un po' cosi' cosi' e suppone che non ci siano stringhe
      * all'interno della query da trattare
      */
@@ -140,16 +141,18 @@ void normalizzaParametriPg( lstring *result, const char *sql, int *quantiParamet
     for ( i=0, lastParam=0; i<len; i++ ) {
 	if ( sql[i]=='?' ) {
 	    /* occhio! i parametri, in PQ, partano da 1 */
-	    lstring_append_sprintf( result, "$%d", lastParam+1 );
+	    result = lstring_append_sprintf_f( result, "$%d", lastParam+1 );
 	    lastParam++;
 	} else {
-	    lstring_append_char( result, sql[i] );
+	    result = lstring_append_char_f( result, sql[i] );
 	}
     }
 
     if ( quantiParametri!=NULL ) {
 	*quantiParametri = lastParam;
     }
+
+    return result;
 }
 
 static void DbPreparedPq_destroy( DbPrepared *parent ) {
@@ -158,8 +161,8 @@ static void DbPreparedPq_destroy( DbPrepared *parent ) {
     lstring *queryDealloc;
     
     queryDealloc = lstring_new();
-    lstring_append_sprintf( queryDealloc, "DEALLOCATE %s", lstring_to_cstr( self->prepName ) );
-    res = PQexec( self->conn, lstring_to_cstr( queryDealloc ) );
+    queryDealloc = lstring_append_sprintf_f( queryDealloc, "DEALLOCATE %s", self->prepName );
+    res = PQexec( self->conn, queryDealloc );
     if ( res!=NULL ) {
 	PQclear( res );
     }
@@ -223,7 +226,7 @@ static lbool DbPreparedPq_sql_exec( DbPrepared *parent, lerror **error ) {
 	}
     }
 
-    res = PQexecPrepared( self->conn, lstring_to_cstr( self->prepName ),
+    res = PQexecPrepared( self->conn, self->prepName,
 			  self->quantiParametri, valori, NULL, NULL, 0 );
 
     if ( PQresultStatus(res)!=PGRES_COMMAND_OK && PQresultStatus(res)!=PGRES_TUPLES_OK ) {
@@ -256,7 +259,7 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
 	}
     }
 
-    res = PQexecPrepared( self->conn, lstring_to_cstr( self->prepName ),
+    res = PQexecPrepared( self->conn, self->prepName,
 			  self->quantiParametri, valori, NULL, NULL, 0 );
 
     if ( PQresultStatus(res)!=PGRES_COMMAND_OK && PQresultStatus(res)!=PGRES_TUPLES_OK ) {
@@ -264,7 +267,7 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
 	result = NULL;
 	PQclear( res );
     } else {
-	result = crea_iteratore_pq_per( res, 0 );
+      result = crea_iteratore_pq_per( DbPrepared_get_originating_connection(parent), res, 0 );
     }
 
     lfree( valori );
@@ -272,7 +275,7 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
     return result;
 }
 
-static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *sql, lerror **error ) {
+static DbPrepared_Pq *crea_prepared_per( DbConnection *conndb, PGconn *conn, int prepId, const char *sql, lerror **error ) {
     PGresult *res = NULL;
     lstring *sqlPq;
     DbPrepared_Pq *self;
@@ -291,16 +294,16 @@ static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *s
     self = lmalloc( sizeof(DbPrepared_Pq) );
     self->conn = conn;
     self->prepName = lstring_new();
-    lstring_append_sprintf( self->prepName, "mprep_%d", prepId );
+    self->prepName = lstring_append_sprintf_f( self->prepName, "mprep_%d", prepId );
 
     sqlPq = lstring_new();
-    normalizzaParametriPg( sqlPq, sql, &self->quantiParametri );
+    sqlPq = normalizzaParametriPg_f( sqlPq, sql, &self->quantiParametri );
     self->parametri = slist_new( self->quantiParametri );
     self->flagNulli = lmalloc( sizeof(int) * self->quantiParametri );
 
     res = PQprepare( self->conn, 
-		     lstring_to_cstr( self->prepName ), 
-		     lstring_to_cstr( sqlPq ), 
+		     self->prepName, 
+		     sqlPq, 
 		     self->quantiParametri,
 		     NULL );
 
@@ -312,7 +315,7 @@ static DbPrepared_Pq *crea_prepared_per( PGconn *conn, int prepId, const char *s
 	lfree( self );
 	self = NULL;
     } else {
-	DbPrepared_init( (DbPrepared *)self, &oClass );
+      DbPrepared_init( conndb, (DbPrepared *)self, &oClass );
     }
 
     PQclear( res );
@@ -346,7 +349,7 @@ lbool DbConnectionPq_sql_exec( DbConnection *parent, const char *sql, lerror **e
     }
 
     if ( PQresultStatus(res)!=PGRES_TUPLES_OK && PQresultStatus(res)!=PGRES_COMMAND_OK ) {
-	lstring_from_cstr( parent->lastError, PQresultErrorMessage( res ) );
+	parent->lastError = lstring_from_cstr_f( parent->lastError, PQresultErrorMessage( res ) );
 	lerror_set( error, PQresultErrorMessage( res ) );
 	result = LFALSE;
     } else {
@@ -374,13 +377,13 @@ DbIterator * DbConnectionPq_sql_retrieve( DbConnection *parent, const char * sql
     if ( res==NULL ) return NULL;
 
     if ( PQresultStatus(res)!=PGRES_TUPLES_OK && PQresultStatus(res)!=PGRES_COMMAND_OK ) {
-	lstring_from_cstr( parent->lastError, PQresultErrorMessage( res ) );
+	parent->lastError = lstring_from_cstr_f( parent->lastError, PQresultErrorMessage( res ) );
 	lerror_set( error, PQresultErrorMessage(res) );
 	PQclear( res );
 	result = NULL;
     } else {
 	lstring_truncate( parent->lastError, 0 );
-	result = crea_iteratore_pq_per( res, 0 );
+	result = crea_iteratore_pq_per( parent, res, 0 );
     }
     
     return result;
@@ -390,7 +393,7 @@ DbPrepared * DbConnectionPq_sql_prepare( DbConnection *parent, const char *sql, 
     DbConnection_Pq *self = (DbConnection_Pq *)parent;
 
     self->lastPrep++;
-    return (DbPrepared *) crea_prepared_per( self->conn, self->lastPrep, sql, error );
+    return (DbPrepared *) crea_prepared_per( parent, self->conn, self->lastPrep, sql, error );
 }
 
 DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
