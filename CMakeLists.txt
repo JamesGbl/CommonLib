@@ -12,3 +12,6 @@ add_library(CommonLib ${C_FILES} ${H_FILES})
 
 add_executable(echo_server Examples/echo_server.c)
 target_link_libraries(echo_server CommonLib)
+
+add_executable(echo_client Examples/echo_client.c)
+target_link_libraries(echo_client CommonLib)
