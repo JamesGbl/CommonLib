@@ -83,7 +83,7 @@ void TCPListenSocket_destroy(TCPListenSocket *self);
  * Return:
  *     A connected socket or NULL in case of errors
  */
-TCPSocket *TCPSocket_connect(const char hostname, const char port, lerror **error);
+TCPSocket *TCPSocket_connect(const char *hostname, const char *port, lerror **error);
 
 /**
  * Function: TCPSocket_new_from_fd
@@ -126,7 +126,8 @@ void TCPSocket_send_string(TCPSocket *self, const char *buf, lerror **error);
  *     buf - The buffer where to write the data (must be not NULL)
  *     len - The maximum bytes of data to read
  * Return:
- *     The actual number of bytes read
+ *     The actual number of bytes read or 0 if the remote side
+ *     has closed the connection
  */
 int TCPSocket_recv(TCPSocket *self, void *buf, int len, lerror **error);
 

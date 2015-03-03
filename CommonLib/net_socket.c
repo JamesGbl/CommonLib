@@ -37,6 +37,7 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,6 +153,45 @@ TCPSocket *TCPSocket_new_from_fd(int fd, const char *localAddress, const char *r
 	self->localAddress = lstring_new_from_cstr(localAddress);
 	self->remoteAddress = lstring_new_from_cstr(remoteAddress);
 	return self;
+}
+
+TCPSocket *TCPSocket_connect(const char *hostname, const char *port, lerror **error) {
+	struct addrinfo hints, *res;
+	int rc, sfd;
+	TCPSocket *result = NULL;
+
+	res = NULL;
+	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	
+	rc = getaddrinfo(hostname, port, &hints, &res);
+	if (0!=rc) {
+		lerror_set_sprintf(error, "getaddrinfo: %s", gai_strerror(rc));
+		goto end;
+	}
+
+	sfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if ((-1)==sfd) {
+		lerror_set(error, "Can't create connection socket.");
+		goto end;
+	}
+
+	rc = connect(sfd, res->ai_addr, res->ai_addrlen);
+	if ((-1)==rc) {
+		lerror_set_sprintf(error, "Can't connect to host: %s", strerror(errno));
+		close(sfd);
+		goto end;
+	}
+
+	result = TCPSocket_new_from_fd(sfd, "local", hostname);
+	
+end:
+	if (res!=NULL) {
+		freeaddrinfo(res);
+	}
+	return result;
 }
 
 int TCPSocket_recv(TCPSocket *self, void *buf, int len, lerror **error) {
