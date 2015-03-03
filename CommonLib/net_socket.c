@@ -28,7 +28,6 @@ struct TCPSocket {
 TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, lerror **error) {
 	TCPListenSocket *result = NULL;
 	struct addrinfo hints, *res, *rp;
-	lerror *myError = NULL;
 	int rc = 0;
 	int sfd = 0;
 	int yes = 1;
@@ -39,8 +38,7 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 	
 	rc = getaddrinfo(hostname, port, &hints, &res);
 	if (0!=rc) {
-		lerror_set_sprintf(&myError, "TCPListenSocket", "getaddrinfo: %s", gai_strerror(rc));
-		lerror_propagate(error, myError);
+		lerror_set_sprintf(error, "TCPListenSocket", "getaddrinfo: %s", gai_strerror(rc));
 		return NULL;
 	}
 
@@ -66,14 +64,13 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 
 	freeaddrinfo(res);
 	if (rp==NULL) {
-		lerror_set(&myError, "Can't bind find an address to bind");
-		lerror_propagate(error, myError);
+		lerror_set(error, "Can't bind find an address to bind");
 		return NULL;
 	}
 
 	rc = listen(sfd, DEFAULT_CONNECTION_BACKLOG);
-	if (rc==0) {
-		lerror_set_sprintf(&myError, "Can't mark this socket as listening");
+	if (rc!=0) {
+		lerror_set_sprintf(error, "Can't mark this socket as listening");
 		close(sfd);
 		return NULL;
 	}
@@ -157,6 +154,17 @@ void TCPSocket_send_full(TCPSocket *self, void *buf, int buf_len, lerror **error
 			bytes_sent = bytes_sent + rc;
 		}
 	}
+}
+
+void TCPSocket_send_string(TCPSocket *self, const char *buf, lerror **error) {
+	lerror *myError = NULL;
+	
+	l_assert(self!=NULL);
+	l_assert(buf!=NULL);
+	l_assert(error==NULL || *error==NULL);
+
+	TCPSocket_send_full(self, (void *)buf, strlen(buf), &myError);
+	lerror_propagate(error, myError);
 }
 
 void TCPSocket_destroy(TCPSocket *self) {

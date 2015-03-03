@@ -98,6 +98,15 @@ TCPSocket *TCPSocket_new_from_fd(int fd, const char *localAddress, const char *r
 void TCPSocket_send_full(TCPSocket *self, void *buf, int buf_len, lerror **error);
 
 /**
+ * Function: TCPSocket_send_string
+ * Send a zero-terminated string to the remote side
+ * Parameters:
+ *     self - The socket (must be not NULL)
+ *     buf - The string to send
+ */
+void TCPSocket_send_string(TCPSocket *self, const char *buf, lerror **error);
+
+/**
  * Function: TCPSocket_recv
  * This function receive data from the socket and writes it in the
  * buffer for a maximum of `len` bytes.
