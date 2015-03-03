@@ -41,6 +41,12 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 typedef struct TCPListenSocket TCPListenSocket;
 
 /**
+ * Class: TCPListenSocket
+ * This class represent a TCP socket
+ */
+typedef struct TCPSocket TCPSocket;
+
+/**
  * Function: TCPListenSocket_new
  * Creates a new listening socket.
  * Parameters:
@@ -58,7 +64,7 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
  * Parameters:
  *     self - The server socket
  */
-void TCPListenSocket_accept(TCPListenSocket *self, lerror **error);
+TCPSocket *TCPListenSocket_accept(TCPListenSocket *self, lerror **error);
 
 /**
  * Function: TCPListenSocket_destroy
@@ -69,20 +75,16 @@ void TCPListenSocket_accept(TCPListenSocket *self, lerror **error);
 void TCPListenSocket_destroy(TCPListenSocket *self);
 
 /**
- * Class: TCPListenSocket
- * This class represent a TCP socket
- */
-typedef struct TCPSocket TCPSocket;
-
-/**
  * Function: TCPSocket_new_from_fd
  * This function incapsulate a file descriptor inside
  * a TCP socket class. The file descriptor must represent
  * an opened socket.
  * Parameters:
  *     fd - File descriptor to incapsulate
+ *     localAddress - The local address
+ *     remoteAddress - The remote address
  */
-TCPSocket *TCPSocket_new_from_fd(int fd);
+TCPSocket *TCPSocket_new_from_fd(int fd, const char *localAddress, const char *remoteAddress);
 
 /**
  * Function: TCPSocket_send_full

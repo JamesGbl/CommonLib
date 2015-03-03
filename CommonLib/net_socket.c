@@ -4,6 +4,8 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,12 +14,15 @@
 
 #define DEFAULT_CONNECTION_BACKLOG 5
 
-struct TCPListenSocket {
+struct TCPListenSocket {	
 	int fd;
+	lstring *localAddress;
 };
 
 struct TCPSocket {
 	int fd;
+	lstring *localAddress;
+	lstring *remoteAddress;
 };
 
 TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, lerror **error) {
@@ -75,6 +80,29 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 	
 	result = (TCPListenSocket *)lmalloc(sizeof(struct TCPListenSocket));
 	result->fd = sfd;
+	result->localAddress = lstring_new();
+	result->localAddress = lstring_append_sprintf_f(result->localAddress, "%s:%i", hostname, port);
+	return result;
+}
+
+TCPSocket *TCPListenSocket_accept(TCPListenSocket *self, lerror **error) {
+	int rc = 0;
+	char *ip = NULL;
+	unsigned int len = sizeof(struct sockaddr_storage);
+	struct sockaddr_storage remoteAddr;
+	TCPSocket *result = NULL;
+	
+	l_assert(self!=NULL);
+	l_assert(error==NULL || *error==NULL);
+
+	rc = accept(self->fd, (struct sockaddr *)&remoteAddr, &len);
+	if (rc==(-1)) {
+		lerror_set(error, "Can't accept connections on this socket");
+		return result;
+	}
+			
+	ip = inet_ntoa(((struct sockaddr_in *)&remoteAddr)->sin_addr);
+	result = TCPSocket_new_from_fd(rc, self->localAddress, ip);
 	return result;
 }
 
@@ -82,12 +110,15 @@ void TCPListenSocket_destroy(TCPListenSocket *self) {
 	if (self==NULL) return;
 	
 	close(self->fd);
+	lstring_delete(self->localAddress);
 	lfree(self);
 }
 
-TCPSocket *TCPSocket_new_from_fd(int fd) {
+TCPSocket *TCPSocket_new_from_fd(int fd, const char *localAddress, const char *remoteAddress) {
 	TCPSocket *self = (TCPSocket *)lmalloc(sizeof(struct TCPSocket));
 	self->fd = fd;
+	self->localAddress = lstring_new_from_cstr(localAddress);
+	self->remoteAddress = lstring_new_from_cstr(remoteAddress);
 	return self;
 }
 
@@ -131,5 +162,7 @@ void TCPSocket_send_full(TCPSocket *self, void *buf, int buf_len, lerror **error
 void TCPSocket_destroy(TCPSocket *self) {
 	if (self==NULL) return;
 	close(self->fd);
+	lstring_delete(self->localAddress);
+	lstring_delete(self->remoteAddress);
 	lfree(self);
 }
