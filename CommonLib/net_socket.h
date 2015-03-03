@@ -75,6 +75,17 @@ TCPSocket *TCPListenSocket_accept(TCPListenSocket *self, lerror **error);
 void TCPListenSocket_destroy(TCPListenSocket *self);
 
 /**
+ * Function: TCPSocket_connect
+ * Connect to a remote host
+ * Parameters:
+ *     hostname - The IP address to use to bound the socket (must not be NULL)
+ *     port - The TCP port number or the service name (must not be NULL)
+ * Return:
+ *     A connected socket or NULL in case of errors
+ */
+TCPSocket *TCPSocket_connect(const char hostname, const char port, lerror **error);
+
+/**
  * Function: TCPSocket_new_from_fd
  * This function incapsulate a file descriptor inside
  * a TCP socket class. The file descriptor must represent
