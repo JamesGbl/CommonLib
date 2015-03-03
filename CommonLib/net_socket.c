@@ -66,10 +66,14 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 	l_assert(hostname!=NULL);
 	l_assert(port!=NULL);
 	l_assert(error==NULL || *error==NULL);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
 	
 	rc = getaddrinfo(hostname, port, &hints, &res);
 	if (0!=rc) {
-		lerror_set_sprintf(error, "TCPListenSocket", "getaddrinfo: %s", gai_strerror(rc));
+		lerror_set_sprintf(error, "getaddrinfo: %s", gai_strerror(rc));
 		return NULL;
 	}
 
