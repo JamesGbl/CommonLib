@@ -16,6 +16,10 @@ struct TCPListenSocket {
 	int fd;
 };
 
+struct TCPSocket {
+	int fd;
+};
+
 TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, lerror **error) {
 	TCPListenSocket *result = NULL;
 	struct addrinfo hints, *res, *rp;
@@ -74,7 +78,58 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 	return result;
 }
 
-void TCPListenSocket_delete(TCPListenSocket *self) {
+void TCPListenSocket_destroy(TCPListenSocket *self) {
+	if (self==NULL) return;
+	
+	close(self->fd);
+	lfree(self);
+}
+
+TCPSocket *TCPSocket_new_from_fd(int fd) {
+	TCPSocket *self = (TCPSocket *)lmalloc(sizeof(struct TCPSocket));
+	self->fd = fd;
+	return self;
+}
+
+int TCPSocket_recv(TCPSocket *self, void *buf, int len, lerror **error) {
+	int result = 0;
+	
+	l_assert(self!=NULL);
+	l_assert(error==NULL || *error==NULL);
+	l_assert(len>0);
+
+	result = recv(self->fd, buf, len, 0);
+	if (result==(-1)) {
+		lerror_set(error, "Can't read data from stream");
+	}
+	return result;
+}
+
+void TCPSocket_send_full(TCPSocket *self, void *buf, int buf_len, lerror **error) {
+	int bytes_sent = 0;
+	int rc = 0;
+	
+	l_assert(self!=NULL);
+	l_assert(buf!=NULL);
+	l_assert(buf_len>0);
+	l_assert(error==NULL || *error==NULL);
+
+	while (bytes_sent) {
+		rc = send(self->fd, buf+bytes_sent, buf_len-bytes_sent, 0);
+		if (rc==(-1)) {
+			lerror_set(error, "Cannot send bytes to this socket");
+			break;
+		} else if (rc==0) {
+			lerror_set(error, "Socket closed connection");
+			break;
+		} else {
+			bytes_sent = bytes_sent + rc;
+		}
+	}
+}
+
+void TCPSocket_destroy(TCPSocket *self) {
+	if (self==NULL) return;
 	close(self->fd);
 	lfree(self);
 }
