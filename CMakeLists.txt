@@ -9,3 +9,6 @@ file(GLOB_RECURSE H_FILES CommonLib/*.h)
 include_directories(.)
 include_directories(${PostgreSQL_INCLUDE_DIR})
 add_library(CommonLib ${C_FILES} ${H_FILES})
+
+add_executable(echo_server Examples/echo_server.c)
+target_link_libraries(echo_server CommonLib)
