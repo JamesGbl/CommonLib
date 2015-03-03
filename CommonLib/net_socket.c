@@ -142,7 +142,7 @@ void TCPSocket_send_full(TCPSocket *self, void *buf, int buf_len, lerror **error
 	l_assert(buf_len>0);
 	l_assert(error==NULL || *error==NULL);
 
-	while (bytes_sent) {
+	while (bytes_sent!=buf_len) {
 		rc = send(self->fd, buf+bytes_sent, buf_len-bytes_sent, 0);
 		if (rc==(-1)) {
 			lerror_set(error, "Cannot send bytes to this socket");
