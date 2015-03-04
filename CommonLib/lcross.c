@@ -107,3 +107,11 @@ void l_vsnprintf(char *d, int len, const char *format, va_list args) {
 	vsnprintf(d, len, format, args);
 #endif
 }
+
+int l_atoi(const char *s) {
+	if (s==NULL) {
+		return 0;
+	} else {
+		return atoi(s);
+	}
+}

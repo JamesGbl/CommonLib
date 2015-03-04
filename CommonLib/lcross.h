@@ -87,6 +87,13 @@ int l_stricmp(const char *s, const char *m);
  */
 uint16_t l_log2(uint32_t n);
 
+/**
+ * Function: l_atoi
+ * Null-safe version of the atoi function that returns
+ * 0 on atoi(NULL)
+ */
+int l_atoi(const char *s);
+
 #define stringize_op1( x )              #x
 
 /**
