@@ -53,6 +53,8 @@ int main() {
 	listeningSocket = TCPListenSocket_new("0.0.0.0", "3233", &myError);
 	if (myError!=NULL) panic(myError);
 
+	puts("Echo server is accepting connections"); fflush(stdout);
+	
 	while(1) {
 		socket = TCPListenSocket_accept(listeningSocket, &myError);
 		if (myError!=NULL) panic(myError);
