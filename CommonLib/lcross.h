@@ -108,11 +108,11 @@ int l_atoi(const char *s);
  * Assertion check. This check doesn't remain in the production code
  */
 #ifndef __MSC__
-#ifdef DEBUG
+#ifdef NDEBUG
+#define l_assert(cond) {}
+#else
 #define l_assert(cond) \
     l_assert_internal( cond, __FUNCTION__, __FILE__, __LINE__ )
-#else
-#define l_assert(cond) {}
 #endif
 #else
 #define l_assert(cond) \
