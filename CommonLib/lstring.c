@@ -457,13 +457,13 @@ int lstring_len( lstring* str ) {
 */
 lstring* lstring_append_sprintf_f( lstring *str, const char *format, ... ) {
     va_list args;
-    char buffer[512];
+    char buffer[1024];
 
     va_start( args, format );
-    l_vsnprintf( buffer, 511, format, args );
+    l_vsnprintf( buffer, 1023, format, args );
     va_end( args );
 
-    buffer[511] = '0';
+    buffer[1023] = '0';
     return lstring_append_cstr_f( str, buffer );
 }
 

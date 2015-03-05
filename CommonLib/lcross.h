@@ -87,6 +87,13 @@ int l_stricmp(const char *s, const char *m);
  */
 uint16_t l_log2(uint32_t n);
 
+/**
+ * Function: l_atoi
+ * Null-safe version of the atoi function that returns
+ * 0 on atoi(NULL)
+ */
+int l_atoi(const char *s);
+
 #define stringize_op1( x )              #x
 
 /**
@@ -101,11 +108,11 @@ uint16_t l_log2(uint32_t n);
  * Assertion check. This check doesn't remain in the production code
  */
 #ifndef __MSC__
-#ifdef DEBUG
+#ifdef NDEBUG
+#define l_assert(cond) {}
+#else
 #define l_assert(cond) \
     l_assert_internal( cond, __FUNCTION__, __FILE__, __LINE__ )
-#else
-#define l_assert(cond) {}
 #endif
 #else
 #define l_assert(cond) \
