@@ -118,6 +118,14 @@ TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, ler
 	return result;
 }
 
+TCPListenSocket* TCPListenSocket_new_from_fd(int fd, const char *localAddress) {
+	TCPListenSocket *result = NULL;
+	result = (TCPListenSocket *)lmalloc(sizeof(struct TCPListenSocket));
+	result->fd = fd;
+	result->localAddress = lstring_new_from_cstr(localAddress);
+	return result;
+}
+
 TCPSocket *TCPListenSocket_accept(TCPListenSocket *self, lerror **error) {
 	int rc = 0;
 	char *ip = NULL;

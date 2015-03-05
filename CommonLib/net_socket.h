@@ -58,6 +58,21 @@ typedef struct TCPSocket TCPSocket;
  */
 TCPListenSocket* TCPListenSocket_new(const char *hostname, const char *port, lerror **error);
 
+
+/**
+ * Function: TCPListenSocket_new
+ * Creates a new listening socket encapsulating a pre-existent
+ * file descriptor
+ * Paremeters:
+ *     fd - The file descriptor to encapsulate
+ *     hostname - The hostname where fd is listening
+ * Returns:
+ *     A new listening socket already bound to the port and 
+ *     listening
+ */
+TCPListenSocket* TCPListenSocket_new_from_fd(int fd, const char *hostname);
+
+
 /**
  * Function: TCPListenSocket_accept
  * Accept an incoming connection from this server socket 
