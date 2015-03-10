@@ -31,6 +31,7 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <systemd/sd-daemon.h>
 #include "CommonLib/net_socket.h"
 
 void panic(lerror *error) {
@@ -50,7 +51,13 @@ int main() {
 	TCPListenSocket *listeningSocket = NULL;
 	TCPSocket *socket = NULL;
 
-	listeningSocket = TCPListenSocket_new("0.0.0.0", "3233", &myError);
+	if (sd_listen_fds(0)==0) {
+		listeningSocket = TCPListenSocket_new("0.0.0.0", "3233", &myError);
+	} else {
+		listeningSocket = TCPListenSocket_new_from_fd(SD_LISTEN_FDS_START + 0, "localhost:3233");
+		puts("Echo server received socket from SystemD"); fflush(stdout);
+	}
+	
 	if (myError!=NULL) panic(myError);
 
 	puts("Echo server is accepting connections"); fflush(stdout);
