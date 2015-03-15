@@ -48,7 +48,7 @@ typedef void (*destructor_t)(void *object);
  *   A reference counted memory space with the reference
  *   count initialized at 1.
  */
-void *rc_malloc(size_t size, destructor_t destructor);
+void *rc_malloc(int size, destructor_t destructor);
 
 /**
  * Function: rc_ref
@@ -66,5 +66,16 @@ void rc_ref(void *rc);
  *   rc - The memory space
  */
 void rc_unref(void *rc);
+
+/**
+ * Function: rc_count
+ * Gets the current value of the reference count of this
+ * memory space.
+ * Parameters:
+ *   rc - The memory space
+ * Returns:
+ *   The reference count
+ */
+int rc_count(void *rc);
 
 #endif
