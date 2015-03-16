@@ -10,8 +10,14 @@ include_directories(.)
 include_directories(${PostgreSQL_INCLUDE_DIR})
 add_library(CommonLib ${C_FILES} ${H_FILES})
 
+find_package(PkgConfig)
+if (PKG_CONFIG_FOUND)
+   pkg_check_modules(SYSTEMD "systemd" REQUIRED)
+   include_directories(SYSTEMD_INCLUDE_DIR)
+endif (PKG_CONFIG_FOUND)
+
 add_executable(echo_server Examples/echo_server.c)
-target_link_libraries(echo_server CommonLib)
+target_link_libraries(echo_server CommonLib systemd)
 
 add_executable(echo_client Examples/echo_client.c)
 target_link_libraries(echo_client CommonLib)

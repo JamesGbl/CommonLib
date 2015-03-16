@@ -28,52 +28,56 @@ For more information, please refer to <http://unlicense.org/>
 
 Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <systemd/sd-daemon.h>
-#include "CommonLib/net_socket.h"
+#include <assert.h>
+#include "refcount.h"
 
-void panic(lerror *error) {
-	lstring *buf = NULL;
+typedef struct {
+	destructor_t destructor;
+	int rc;
+} rc_descriptor;
+
+void *rc_malloc(size_t size, destructor_t destructor) {
+	void *result = NULL;
+	rc_descriptor *descriptor;
 	
-	l_assert(error!=NULL);
-	buf = lstring_new();
-	buf = lerror_fill_f(error, buf);
-	fprintf(stderr, "%s", buf);
-	lstring_delete(buf);
+	assert(size>0);
+	result = malloc(size+sizeof(rc_descriptor));
+	descriptor = result;
+	descriptor->destructor = destructor;
+	descriptor->rc = 1;
+	result = result + sizeof(rc_descriptor);
 
-	abort();
+	return result;
 }
 
-int main() {
-	lerror *myError = NULL;
-	TCPListenSocket *listeningSocket = NULL;
-	TCPSocket *socket = NULL;
+void rc_ref(void *rc) {
+	rc_descriptor *descriptor;
 
-	if (sd_listen_fds(0)==0) {
-		listeningSocket = TCPListenSocket_new("0.0.0.0", "3233", &myError);
-	} else {
-		listeningSocket = TCPListenSocket_new_from_fd(SD_LISTEN_FDS_START + 0, "localhost:3233");
-		puts("Echo server received socket from SystemD"); fflush(stdout);
+	descriptor = rc;
+	descriptor = descriptor - 1;
+	descriptor->rc++;
+}
+
+void rc_unref(void *rc) {
+	rc_descriptor *descriptor;
+
+	descriptor = rc;
+	descriptor = descriptor - 1;
+	descriptor->rc--;
+	if (0==descriptor->rc) {
+		if (descriptor->destructor)
+			descriptor->destructor(rc);
+		free(descriptor);
 	}
-	
-	if (myError!=NULL) panic(myError);
+}
 
-	puts("Echo server is accepting connections"); fflush(stdout);
-	
-	while(1) {
-		socket = TCPListenSocket_accept(listeningSocket, &myError);
-		if (myError!=NULL) panic(myError);
+int rc_count(void *rc) {
+	rc_descriptor *descriptor;
 
-		TCPSocket_send_string(socket, "Hello from the server!", &myError);
-		if (myError!=NULL) panic(myError);
-
-		TCPSocket_destroy(socket);
-		socket = NULL;
-	}
-
-	TCPListenSocket_destroy(listeningSocket);
-	return 0;
+	descriptor = rc;
+	descriptor = descriptor - 1;
+	return descriptor->rc;
 }
 

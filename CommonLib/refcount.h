@@ -28,52 +28,54 @@ For more information, please refer to <http://unlicense.org/>
 
 Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
+#ifndef __REFCOUNT_H
+#define __REFCOUNT_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <systemd/sd-daemon.h>
-#include "CommonLib/net_socket.h"
+/**
+ * Type: destructor_t
+ * This type is respected by destructor functions
+ */
+typedef void (*destructor_t)(void *object);
 
-void panic(lerror *error) {
-	lstring *buf = NULL;
-	
-	l_assert(error!=NULL);
-	buf = lstring_new();
-	buf = lerror_fill_f(error, buf);
-	fprintf(stderr, "%s", buf);
-	lstring_delete(buf);
+/**
+ * Function: rc_malloc
+ * This function allocates a reference counted memory space.
+ * Parameters:
+ *   size - The size, in bytes, to allocate
+ *   destructor - The destructor that will be called when the
+ *    reference count reaches 0. Can be NULL.
+ * Returns:
+ *   A reference counted memory space with the reference
+ *   count initialized at 1.
+ */
+void *rc_malloc(int size, destructor_t destructor);
 
-	abort();
-}
+/**
+ * Function: rc_ref
+ * Increments the reference count of this memory space
+ * Parameters:
+ *   rc - The memory space
+ */
+void rc_ref(void *rc);
 
-int main() {
-	lerror *myError = NULL;
-	TCPListenSocket *listeningSocket = NULL;
-	TCPSocket *socket = NULL;
+/**
+ * Function rc_unref
+ * Descrements the reference count of this memory space and,
+ * if the reference count reaches 0, invoke the destructor.
+ * Parameters:
+ *   rc - The memory space
+ */
+void rc_unref(void *rc);
 
-	if (sd_listen_fds(0)==0) {
-		listeningSocket = TCPListenSocket_new("0.0.0.0", "3233", &myError);
-	} else {
-		listeningSocket = TCPListenSocket_new_from_fd(SD_LISTEN_FDS_START + 0, "localhost:3233");
-		puts("Echo server received socket from SystemD"); fflush(stdout);
-	}
-	
-	if (myError!=NULL) panic(myError);
+/**
+ * Function: rc_count
+ * Gets the current value of the reference count of this
+ * memory space.
+ * Parameters:
+ *   rc - The memory space
+ * Returns:
+ *   The reference count
+ */
+int rc_count(void *rc);
 
-	puts("Echo server is accepting connections"); fflush(stdout);
-	
-	while(1) {
-		socket = TCPListenSocket_accept(listeningSocket, &myError);
-		if (myError!=NULL) panic(myError);
-
-		TCPSocket_send_string(socket, "Hello from the server!", &myError);
-		if (myError!=NULL) panic(myError);
-
-		TCPSocket_destroy(socket);
-		socket = NULL;
-	}
-
-	TCPListenSocket_destroy(listeningSocket);
-	return 0;
-}
-
+#endif
