@@ -54,6 +54,7 @@ static const char *level_to_string( enum LoggingLevel level ) {
 
 static void l_internal_log( const char *domain, enum LoggingLevel level, const char *format, va_list args ) {
     char logMessage[2048];
+	FILE *out = NULL;
 
     l_vsnprintf( logMessage, 2047, format, args );
 
@@ -61,6 +62,16 @@ static void l_internal_log( const char *domain, enum LoggingLevel level, const c
     fputs( " - ", stderr );
     fputs( logMessage, stderr );
     fputs( "\n", stderr );
+
+#ifdef FILE_TRACE
+	if (fopen_s(&out, "debug.log", "a")==0) {
+		fputs( level_to_string( level ), out );
+		fputs( " - ", out );
+		fputs( logMessage, out );
+		fputs( "\n", out );
+		fclose(out);
+	}
+#endif
 }
 
 void l_log( const char *domain, enum LoggingLevel level, const char *format, ... ) {
