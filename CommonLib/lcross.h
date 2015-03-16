@@ -94,6 +94,16 @@ uint16_t l_log2(uint32_t n);
  */
 int l_atoi(const char *s);
 
+#ifdef _WIN32
+/**
+ * Function: l_current_time_millis
+ * Gets the current time in milliseconds
+ * Returns:
+ *   The current time in milliseconds
+ */
+long l_current_time_millis(void);
+#endif
+
 #define stringize_op1( x )              #x
 
 /**

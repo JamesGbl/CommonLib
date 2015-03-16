@@ -37,6 +37,9 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 int l_stricmp( const char *s1, const char *s2 ) {
     char c1, c2;
@@ -115,3 +118,14 @@ int l_atoi(const char *s) {
 		return atoi(s);
 	}
 }
+
+#ifdef _WIN32
+long l_current_time_millis(void) {
+	SYSTEMTIME time;
+	GetSystemTime(&time);
+	return (time.wSecond * 1000) + time.wMilliseconds;	
+}
+#else
+#error "TODO: implement l_current_time_millis for Unix systems"
+	return 0;
+#endif
