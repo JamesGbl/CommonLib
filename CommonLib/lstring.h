@@ -185,7 +185,7 @@ void lstring_trim( lstring* str );
  * Returns:
  *     TRUE if the needle is in the heystack, FALSE otherwise
  */
-int lstring_contains( lstring* str, const char *other );
+int lstring_contains( const lstring* str, const char *other );
 
 /*
 ** Controlla l'uguaglianza di due stringhe, di cui una in stile C
@@ -219,6 +219,31 @@ void lstring_tolower( lstring* str );
 */
 void lstring_replacechar( lstring* str, char orig, char dest );
 
+/**
+ * Function: lstring_find_substring
+ * Find the starting index of a substring
+ * Parameters:
+ *     str - The string where to search the substring (must not be NULL)
+ *     needle - The substring to find (must not be NULL)
+ *     idx - The index where start the search
+ * Returns:
+ *     The index (starting with zero) where the substring
+ *     is found or -1 if the substring hasn't been found
+ */
+int lstring_find_substring(lstring *str, const char *needle, int idx);
+
+/**
+ * Function: lstring_replace_all_f
+ * Replaces all occurrences of a substring in the string
+ * Parameters:
+ *     str - The lstring (not NULL)
+ *     needle - The string to search (must not be NULL)
+ *     replacement - The replacement string (must not be NULL)
+ * Returns:
+ *     The string with occurrences replaced
+ */
+lstring *lstring_replace_all_f(lstring *str, const char *needle, const char *replacement);
+
 /*
 ** Controlla se una certa stringa ha un'altra stringa per suffisso
 */
@@ -240,6 +265,17 @@ int lstring_last_index_of( lstring* str, char c );
 void lstring_truncate( lstring* str, int l );
 
 /**
+ * Function: lstring_drop_left
+ * Drop `l` characters from the left of this string
+ * Parameters:
+ *     str - The lstring to operate on
+ *     l - How many characters to drop from the left side. Should be greater
+ *         than 0. If you drop more characters than the length of the string
+ *         the string will be truncated at length zero.
+ */
+void lstring_drop_left(lstring *str, int l);
+
+/**
  * Function: lstring_reset
  * Clear the lstring
  *
@@ -255,7 +291,7 @@ void lstring_reset( lstring* str );
  * Parameters:
  *     str - The lstring (not NULL)
  */
-int lstring_len( lstring* str );
+int lstring_len( const lstring* str );
 
 /*
 ** Dimensione del buffer
