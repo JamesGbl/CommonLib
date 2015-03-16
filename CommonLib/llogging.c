@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "lcross.h"
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 /*
 About: License
@@ -33,6 +36,8 @@ For more information, please refer to <http://unlicense.org/>
 Author: Leonardo Cecchi <leonardoce@interfree.it>
 */ 
 
+//#define FILE_TRACE
+
 static const char *level_to_string( enum LoggingLevel level ) {
     switch( level ) {
     case LEVEL_ERROR:
@@ -54,6 +59,9 @@ static const char *level_to_string( enum LoggingLevel level ) {
 
 static void l_internal_log( const char *domain, enum LoggingLevel level, const char *format, va_list args ) {
     char logMessage[2048];
+#ifdef _WIN32
+	char exeName[MAX_PATH];
+#endif
 	FILE *out = NULL;
 
     l_vsnprintf( logMessage, 2047, format, args );
@@ -65,6 +73,11 @@ static void l_internal_log( const char *domain, enum LoggingLevel level, const c
 
 #ifdef FILE_TRACE
 	if (fopen_s(&out, "debug.log", "a")==0) {
+#ifdef _WIN32
+		GetModuleFileNameA(0, exeName, sizeof(exeName));
+		fputs(exeName, out);
+		fputs(") ", out);
+#endif
 		fputs( level_to_string( level ), out );
 		fputs( " - ", out );
 		fputs( logMessage, out );
