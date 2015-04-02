@@ -29,6 +29,7 @@ For more information, please refer to <http://unlicense.org/>
 Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 */ 
 #include "lmemory.h"
+#include <string.h>
 
 #ifdef LMEM_USE_COTASK_ALLOCATOR
 // Questo tipo di allocazione di memoria serve per
@@ -40,6 +41,7 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #include <Windows.h>
 
 void *lmalloc(size_t size) {
+	if (size==0) return NULL;
 	return CoTaskMemAlloc(size);
 }
 
@@ -56,6 +58,7 @@ void *lrealloc(void *area, size_t newSize) {
 #include <stdlib.h>
 
 void *lmalloc(size_t size) {
+	if (size==0) return NULL;
 	return malloc(size);
 }
 
@@ -68,3 +71,14 @@ void *lrealloc(void *area, size_t newSize) {
 }
 
 #endif
+
+void *lmalloczero(size_t size) {
+	void *result;
+
+	if (size==0) return NULL;
+	result = lmalloc(size);
+	if(result!=NULL) {
+		memset(result, 0, size);
+	}
+	return result;
+}

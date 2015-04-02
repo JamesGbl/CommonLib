@@ -36,9 +36,19 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 
 /**
  * Function: lmalloc
- * Alloca un blocco di memoria rimandando all'allocatore di sistema
+ * Allocates a memory block given a size
+ * Parameters:
+ *   size - Size of the memory block. If it is 0 this function returns NULL
  */
 void *lmalloc(size_t size);
+
+/**
+ * Function: lmalloczero
+ * Allocates a zero-filled memory space
+ * Parameters:
+ *   size - The size
+ */
+void *lmalloczero(size_t size);
 
 /**
  * Function: lfree
