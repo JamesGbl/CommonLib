@@ -30,15 +30,22 @@ For more information, please refer to <http://unlicense.org/>
 #define __LVECTOR_C_H
 
 struct lvector {
-  void **buffer;
-  int size;
+	void **buffer;
+	int size;
 };
 
+/**
+ * Struct: lvector
+ * This structure represents a vector of dynamic size
+ */
 typedef struct lvector lvector;
 
-/*
-** Inizializza un nuovo vettore con la dimensione predefinita passata
-*/
+/**
+ * Function: lvector_new
+ * Initializes a new vector with an initial defined size
+ * Parameters:
+ *   size - Initial size
+ */
 lvector* lvector_new(int size);
 
 /*
