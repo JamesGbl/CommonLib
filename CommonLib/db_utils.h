@@ -40,7 +40,7 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 #include "db_interface.h"
 
 /**
- * Function: db_append_sql_escaped
+ * Function: db_append_sql_escaped_f
  * Append to a query an escaped string param
  * Parameters:
  *    str - Destination lstring
@@ -49,7 +49,7 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 lstring* db_append_sql_escaped_f( lstring *str, const char *value );
 
 /**
- * Function: db_put_sql_format
+ * Function: db_put_sql_format_f
  * This function is like db_append_sql_format but will reset the string before
  * writing the query.
  * Parameters:
@@ -59,7 +59,7 @@ lstring* db_append_sql_escaped_f( lstring *str, const char *value );
 lstring* db_put_sql_format_f( lstring *str, const char *format, ... );
 
 /**
- * Function: db_append_sql_format
+ * Function: db_append_sql_format_f
  * This is a convenience function to prepare a SQL query. The format string, which
  * is printf-like, can contain placeholders like:
  *     "%k" to represent a literal string (keyword)
