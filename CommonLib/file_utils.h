@@ -48,4 +48,25 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
  */
 lstring *create_lstring_from_file(const char *fname, lerror **error);
 
+/**
+ * Function: write_lstring_to_file
+ * This function will overwrite the named file with the data from
+ * the buffer
+ */
+void write_lstring_to_file(const char *fname, lstring *buffer, lerror **error);
+
+/**
+ * Function: file_exists
+ * This function check if a file exists
+ */
+lbool file_exists(const char *fname);
+
+/**
+ * Function: lcreatetempname_f
+ * Fill an lstring with the name of a new temporary file
+ * Parameters:
+ *   buffer - The lstring to fill
+ */
+lstring* lcreatetempname_f(lstring *buffer);
+
 #endif

@@ -30,6 +30,11 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 
 #include "file_utils.h"
 #include <stdio.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 
 lstring *create_lstring_from_file(const char *fname, lerror **error) {
 	FILE *in;
@@ -57,4 +62,50 @@ lstring *create_lstring_from_file(const char *fname, lerror **error) {
 end:
 	if (in!=NULL) fclose(in);
 	return data;
+}
+
+void write_lstring_to_file(const char *fname, lstring *buffer, lerror **error) {
+	FILE *out;
+
+	l_assert(fname!=NULL);
+	l_assert(buffer!=NULL);
+	l_assert(error==NULL || *error==NULL);
+
+	if(fopen_s(&out, fname, "wb")) {
+		lerror_set_sprintf(error, "IO error writing to %s", fname);
+		return;
+	}
+
+	fwrite(buffer, 1, lstring_len(buffer), out);
+	fclose(out);
+}
+
+#ifdef WIN32
+lbool file_exists(const char *fname) {
+	DWORD dwAttrib = GetFileAttributes(fname);
+
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+#else
+lbool file_exists(const char *fname) {
+	l_assert(fname!=NULL);
+
+	if (access(fname, F_OK) != -1) {
+		return LTRUE;
+	} else {
+		return LFALSE;
+	}
+}
+#endif
+
+lstring* lcreatetempname_f(lstring *buffer) {
+#ifdef _WIN32
+	char tempspace[L_tmpnam_s];
+	l_assert(buffer!=NULL);
+	tmpnam_s(tempspace, L_tmpnam_s);
+	return lstring_from_cstr_f(buffer, tempspace);
+#else
+	return lstring_from_cstr_f(buffer, tmpnam(NULL));
+#endif
 }
