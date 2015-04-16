@@ -57,6 +57,23 @@ smatrix *smatrix_new(int rowsize, int colsize) {
 	return result;
 }
 
+smatrix *smatrix_new_copy(const smatrix* other) {
+	smatrix *self;
+	int i;
+
+	if (other==NULL) return NULL;
+	self = (smatrix *) lmalloczero(sizeof(struct smatrix));
+	self->cols = other->cols;
+	self->rows = other->rows;
+	self->data = (lstring **)lmalloczero(sizeof(lstring *)*self->cols*self->rows);
+
+	for(i=0; i<(self->cols * self->rows); i++) {
+		self->data[i] = lstring_new_from_lstr(other->data[i]);
+	}
+	
+	return self;
+}
+
 int smatrix_get_rows(smatrix *self) {
 	l_assert(self!=NULL);
 	return self->rows;

@@ -32,6 +32,7 @@ For more information, please refer to <http://unlicense.org/>
 typedef struct smatrix smatrix;
 
 /**
+ * Function: smatrix_new
  * Creates a new string matrix data type.
  * 
  * Parameters:
@@ -41,6 +42,15 @@ typedef struct smatrix smatrix;
 smatrix *smatrix_new(int rowsize, int colsize);
 
 /**
+ * Function: smatrix_new_copy
+ * Copy a string matrix
+ * Parameters:
+ *   other - Other string matrix
+ */
+smatrix *smatrix_new_copy(const smatrix* other);
+
+/**
+ * Function: smatrix_get_rows
  * Returns the number of rows of this string matrix
  *
  * Parameters:
@@ -49,6 +59,7 @@ smatrix *smatrix_new(int rowsize, int colsize);
 int smatrix_get_rows(smatrix *self);
 
 /**
+ * Function: smatrix_get_cols
  * Returns the number of columns of this string matrix
  *
  * Parameters:
@@ -57,6 +68,7 @@ int smatrix_get_rows(smatrix *self);
 int smatrix_get_cols(smatrix *self);
 
 /**
+ * Function: smatrix_set
  * Write a string to a cell
  *
  * Parameters:
@@ -68,6 +80,7 @@ int smatrix_get_cols(smatrix *self);
 void smatrix_set(smatrix *self, int row, int col, const char *contents);
 
 /**
+ * Function: smatrix_get
  * Get the contents of a matrix cell
  *
  * Parameters:
@@ -78,6 +91,7 @@ void smatrix_set(smatrix *self, int row, int col, const char *contents);
 const char *smatrix_get(smatrix *self, int row, int col);
 
 /**
+ * Function: smatrix_destroy
  * Destroy a matrix and frees all the memory cells
  *
  * Parameters:
