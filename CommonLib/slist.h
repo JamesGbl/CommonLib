@@ -54,6 +54,16 @@ typedef struct slist slist;
 slist*         slist_new( int initialSize );
 
 /**
+ * Function: slist_new_copy
+ * Create a new slist from an existing slist
+ * Parameters:
+ *   other - The other slist
+ * Returns:
+ *   An slist
+ */
+slist *slist_new_copy(const slist *other);
+
+/**
  * Function:  slist_destroy
  *
  * Destroy the list and deallocate all strings
