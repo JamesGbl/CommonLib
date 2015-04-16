@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "lcross.h"
+#include "lstring.h"
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -125,4 +126,17 @@ void l_error( const char *format, ... ) {
     va_start( args, format );
     l_internal_log( NULL, LEVEL_ERROR, format, args );
     va_end( args );
+}
+
+void log_error_and_free(lerror **error) {
+	lstring *message;
+	
+	if (error==NULL || *error==NULL) return;
+
+	message = lstring_new();
+	message = lerror_fill_f(*error, message);
+	l_error(message);
+	lstring_delete(message);
+
+	lerror_delete(error);
 }

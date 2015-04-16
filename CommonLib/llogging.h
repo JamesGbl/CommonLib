@@ -34,6 +34,7 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 /**
  * File: llogging.h
  */
+#include "lerror.h"
 
 /**
  * Enum: LoggingLevel
@@ -82,6 +83,14 @@ void l_debug( const char *format, ... );
  * Convenience function with NULL logging domain and ERROR level
  */
 void l_error( const char *format, ... );
+
+/**
+ * Function: log_error_and_free
+ * Log this error structure as CRITICAL level, frees it and put
+ * NULL in the variable. If the error is NULL this function do
+ * nothing.
+ */
+void log_error_and_free(lerror **error);
 
 #endif
 
