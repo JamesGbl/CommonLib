@@ -129,3 +129,35 @@ long l_current_time_millis(void) {
 #error "TODO: implement l_current_time_millis for Unix systems"
 	return 0;
 #endif
+
+int lfopen_s(FILE **pFile, const char *fileName, const char *mode) {
+#ifdef _WIN32
+	return fopen_s(pFile, fileName, mode);
+#else
+	FILE *f;
+	if (fileName==NULL || mode==NULL || pFile==NULL) return 1;
+	f = fopen(fileName, mode);
+	if (f==NULL) {
+		return 1;
+	}
+	*pFile = f;
+#endif
+}
+
+int lunlink(const char *name) {
+	if (name==NULL) return 1;
+#ifdef _WIN32
+	return _unlink(name);
+#else
+	return unlink(name);
+#endif
+}
+
+int lfileno(FILE *f) {
+	if (f==NULL) return -1;
+#ifdef _WIN32
+	return _fileno(f);
+#else
+	return fileno(f);
+#endif
+}

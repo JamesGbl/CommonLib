@@ -30,6 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 */ 
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
 
@@ -131,4 +132,29 @@ long l_current_time_millis(void);
 
 void l_assert_internal( lbool condition, const char *function, const char *fileName, int lineNo );
 
+/**
+ * Function: lfopen_s
+ * Cross compiler lfopen_s
+ * Parameters:
+ *   pFile - A pointer to the file pointer that will receive the opened file
+ *   filename - The file name
+ *   mode - Type of access permitted
+ * Returns:
+ *   zero if successful or an error code on failure
+ */
+int lfopen_s(FILE **pFile, const char *fileName, const char *mode);
+
+/**
+ * Function: lunlink
+ * Cross compiler unlink
+ * Parameters:
+ *   filename - The file to delete
+ */
+int lunlink(const char *name);
+
+/**
+ * Function: lfileno
+ * Cross compiler version of fileno
+ */
+int lfileno(FILE *f);
 #endif
