@@ -34,9 +34,6 @@ For more information, please refer to <http://unlicense.org/>
 #include "lcross.h"
 #include "lmemory.h"
 
-/*
-** Inizializza un nuovo vettore con la dimensione predefinita passata
-*/
 lvector* lvector_new(int size)
 {
 	lvector *self = (lvector *)lmalloc(sizeof(lvector));
@@ -45,26 +42,28 @@ lvector* lvector_new(int size)
 	return self;
 }
 
-/*
-** Rende la lunghezza di un vettore
-*/
+lvector* lvector_new_copy(const lvector *other) {
+	int i;
+	lvector *self = lvector_new(other->size);
+
+	for(i=0; i<self->size; i++) {
+		self->buffer[i] = other->buffer[i];
+	}
+
+	return self;
+}
+
 int lvector_len(lvector* self)
 {
 	return self->size;
 }
 
-/*
-** Prende un elemento in un vettore
-*/
 void *lvector_at(lvector* self, int idx)
 {
 	l_assert( 0<=idx && idx<self->size );
 	return self->buffer[idx];
 }	
 
-/*
-** Aumenta le dimensioni del vettore
-*/
 void lvector_resize(lvector* self, int newSize)
 {
 	if( self->size < newSize )
@@ -75,18 +74,12 @@ void lvector_resize(lvector* self, int newSize)
 	self->size = newSize;
 }
 
-/*
-** Modifica un elemento all'interno di un vettore
-*/
 void lvector_set(lvector *self, int idx, void *element)
 {
 	l_assert(0<=idx && idx<self->size);
 	self->buffer[idx]=element;
 }
 
-/*
-** Dealloca le risorse corrispondenti a questo vettore
-*/
 void lvector_delete(lvector *self)
 {
     if ( self==NULL ) return;
@@ -94,9 +87,6 @@ void lvector_delete(lvector *self)
 	lfree(self);
 }
 
-/*
-** L'indirizzo al quale e' allocato il vettore
-*/
 void *lvector_address(lvector *self) 
 {
     if ( self==NULL ) return NULL;

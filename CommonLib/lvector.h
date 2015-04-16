@@ -48,34 +48,64 @@ typedef struct lvector lvector;
  */
 lvector* lvector_new(int size);
 
-/*
-** Rende la lunghezza di un vettore
-*/
+/**
+ * Function: lvector_new_copy
+ * Create a new lvector with the data of the existing one
+ * Parameters:
+ *   other - The lvector to copy
+ */
+lvector* lvector_new_copy(const lvector *other);
+
+/**
+ * Function: lvector_len
+ * Returns the length of the vector
+ * Parameters:
+ *   self - The vector to operate on
+ */
 int lvector_len(lvector* self);
 
-/*
-** Prende un elemento in un vettore
-*/
+/**
+ * Function: lvector_at
+ * Gets an element from the vector
+ * Parameters:
+ *   self - The vector to operate on
+ *   idx - The index, starting from 0
+ * Returns:
+ *   The element
+ */
 void *lvector_at(lvector* self, int idx);
 
-/*
-** Aumenta le dimensioni del vettore
-*/
+/**
+ * Function: lvector_resize
+ * Enlarge the vector
+ * Parameters:
+ *   self - The vector to operate on
+ *   newSize - The new size
+ */
 void lvector_resize(lvector* self, int newSize);
 
-/*
-** Modifica un elemento all'interno di un vettore
-*/
+/**
+ * Function: lvector_set
+ * Put an element inside this vector
+ * Parameters:
+ *   self - The vector to operate on
+ *   idx - The index of the vector element to substitute
+ *   element - The element to put on the vector
+ */
 void lvector_set(lvector* self, int idx, void *element);
 
-/*
-** Dealloca le risorse corrispondenti a questo vettore
+/**
+ * Function: lvector_delete
+ * Deallocates the vector
+ * Parameters:
+ *   self - The vector to operate on
 */
 void lvector_delete(lvector* self);
 
-/*
-** L'indirizzo al quale e' allocato il vettore
-*/
+/**
+ * Function: lvector_address
+ * Get the starting address of the vector data
+ */
 void *lvector_address(lvector *self);
 
 #endif
