@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "lcross.h"
 #include "lmemory.h"
 #include "buffer.h"
+#include "llogging.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -119,6 +120,43 @@ lstring* webreq_get_param_f( struct webrequest_t *req, lstring *dest, const char
 	return dest;
 }
 
+lbool webreq_has_param( struct webrequest_t *req, const char *paramName ) {
+    char buffer[1024];
+    size_t bufferLen = 1024;
+    int status = 0;
+
+    l_assert( req!=NULL );
+    l_assert( paramName!=NULL );
+
+    if ( req->info->query_string==NULL ) {
+        return LFALSE;
+    }
+
+    status = mg_get_var(req->info->query_string, strlen(req->info->query_string),
+               paramName, buffer, bufferLen);
+    if ( status==-1 ) {
+	return LFALSE;
+    } else {
+	return LTRUE;
+    }
+}
+
+lstring *webreq_get_required_param_f(struct webrequest_t *req, lstring *dest, const char *paramName, lerror **error) {
+	lstring *result;
+
+	l_assert(error==NULL || *error==NULL);
+	l_assert(paramName!=NULL);
+	l_assert(req!=NULL);
+	l_assert(dest!=NULL);
+
+	if (!webreq_has_param(req, paramName)) {
+		lerror_set_sprintf(error, "Manca il parametro %s", paramName);
+	}
+
+	result = webreq_get_param_f(req, dest, paramName);
+	return result;
+}
+
 /* }}} */
 
 /* WebResponse {{{ */
@@ -193,12 +231,11 @@ static void webresp_commit( struct webresponse_t *conn )
                "HTTP/1.1 %i %s\r\n"
                "Content-Type: %s\r\n"
                "Content-Length: %d\r\n" // Always set Content-Length
-               "\r\n"
-               "%s",
+               "\r\n",
                conn->http_status, conn->http_status_desc, 
                conn->content_type, 
-               MemBuffer_len(conn->buffer), 
-               MemBuffer_address(conn->buffer));
+               MemBuffer_len(conn->buffer)); 
+    mg_write(conn->conn, MemBuffer_address(conn->buffer), MemBuffer_len(conn->buffer));
 }
 
 /* }}} */
@@ -261,6 +298,11 @@ static int request_handler( struct mg_connection *conn ) {
     struct webserver_t *self = (struct webserver_t *)(info->user_data);
     int i = 0;
 
+    lstring *buffer = lstring_new();
+    buffer = lstring_append_sprintf_f(buffer, "%s %s [%s]", info->request_method, info->uri, info->query_string);
+    l_info(buffer);
+    lstring_delete(buffer);
+
     l_assert( self!=NULL );
 
     for ( i=0; i<self->rules_count; i++ ) {
@@ -317,6 +359,12 @@ void webserver_add_service( struct webserver_t *self, const char *uri, webservic
     self->rules[ self->rules_count ].handler = handler;
 
     self->rules_count++;
+}
+
+void webserver_wait() {
+	while(1) {
+		lsleep(10);
+	}
 }
 
 /* }}} */

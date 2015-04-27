@@ -66,6 +66,12 @@ void webserver_start( struct webserver_t *self, lerror **error );
  */
 void webserver_destroy( struct webserver_t *self );
 
+/**
+ * Function: webserver_wait
+ * Block the current thread while listening to requests
+ */
+void webserver_wait();
+
 typedef void (*webservice_handler_t)( void *ctx, struct webrequest_t *req, struct webresponse_t *resp, lerror **error );
 
 /**
@@ -127,5 +133,17 @@ void webresp_write_text_len( struct webresponse_t *conn, const char *txt, int le
  * Get a parameter from an HTTP request
  */
 lstring *webreq_get_param_f( struct webrequest_t *req, lstring *dest, const char *paramName );
+
+/**
+ * Function: webreq_has_param
+ * Check the existence of a named parameter
+ */
+lbool webreq_has_param( struct webrequest_t *req, const char *paramName );
+
+/**
+ * Function: webreq_get_required_param_f
+ * Gets a required parameter, throwing an error if is doesn't exist
+ */
+lstring *webreq_get_required_param_f(struct webrequest_t *req, lstring *dest, const char *paramName, lerror **error);
 
 #endif
