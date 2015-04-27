@@ -380,12 +380,14 @@ void lstring_truncate( lstring* str, int l )
 void lstring_reset( lstring* str )
 {
 	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+	if (str==NULL) return;
 	str_header->len=0;
 	str[0]='\x0';
 }
 
 int lstring_len( const lstring* str ) {
 	lstring_header *str_header = (lstring_header *)(str - sizeof(lstring_header));
+	if (str==NULL) return 0;
 	return str_header->len;
 }
 
