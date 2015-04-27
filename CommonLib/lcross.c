@@ -60,6 +60,27 @@ int l_stricmp( const char *s1, const char *s2 ) {
     }
 }
 
+int l_strnicmp(const char *s1, const char *s2, int size) {
+    char c1, c2;
+    int i = 0;
+
+    l_assert( s1!=NULL );
+    l_assert( s2!=NULL );
+
+    while (1) {
+        if (i==size) return 0;
+        c1 = tolower( *s1 );
+        c2 = tolower( *s2 );
+
+        if ( c1<c2 ) return -1;
+        if ( c1>c2 ) return 1;
+        if ( c1==0 || c2==0 ) return 0;
+
+        s1++;
+        s2++;
+    }
+}
+
 void l_assert_internal( lbool condition, const char *function, const char *fileName, int lineNo )
 {
     if ( !condition ) {
@@ -97,7 +118,7 @@ void l_strcpy(char *d, const char *s) {
 
 void l_strcat(char *d, const char *s) {
 #ifdef _WIN32
-	strcat_s(d, strlen(s)+1, s);
+	strcat_s(d, strlen(d)+strlen(s)+1, s);
 #else
 	strcat(d, s);
 #endif
@@ -126,8 +147,15 @@ long l_current_time_millis(void) {
 	return (time.wSecond * 1000) + time.wMilliseconds;	
 }
 #else
-#error "TODO: implement l_current_time_millis for Unix systems"
-	return 0;
+long l_current_time_millis(void) {
+
+	struct timeval  tv;
+	gettimeofday(&tv, NULL);
+
+	double time_in_mill = 
+		 (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ; // convert tv_sec & tv_usec to millisecond
+	return (long)time_in_mill;
+}
 #endif
 
 int lfopen_s(FILE **pFile, const char *fileName, const char *mode) {
@@ -141,6 +169,7 @@ int lfopen_s(FILE **pFile, const char *fileName, const char *mode) {
 		return 1;
 	}
 	*pFile = f;
+	return 0;
 #endif
 }
 
@@ -161,3 +190,33 @@ int lfileno(FILE *f) {
 	return fileno(f);
 #endif
 }
+
+void l_strlwr(char *s) {
+#ifdef _WIN32
+	if (s==NULL) return;
+	_strlwr_s(s, strlen(s));
+#else
+        for ( ; *s; ++s) *s = tolower(*s);
+#endif
+}
+
+void l_strrev(char *s) {
+#ifdef _WIN32
+	_strrev(s);
+#endif
+}
+
+void l_strncpy(char *dest, const char *src, int count) {
+#ifdef _WIN32
+	strncpy_s(dest, strlen(src), src, count);
+#endif
+}
+
+void lsleep(int secs) {
+#ifdef _WIN32
+	Sleep(secs*1000);
+#else
+	sleep(secs);
+#endif
+} 
+	

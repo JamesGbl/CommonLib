@@ -83,6 +83,30 @@ void l_vsnprintf(char *d, int len, const char *format, va_list args);
 int l_stricmp(const char *s, const char *m);
 
 /**
+ * Function: l_strnicmp
+ * Cross-compiler version of strnicmp
+ */
+int l_strnicmp(const char *s1, const char *s2, int size);
+
+/**
+ * Function: l_strlwr
+ * Cross-compiler version of strlwr
+ */
+void l_strlwr(char *s);
+
+/**
+ * Function: l_strrev
+ * Cross-compiler version of strrev
+ */
+void l_strrev(char *s);
+
+/**
+ * Function: l_strncpy
+ * Cross-compiler version of strncpy
+ */
+void l_strncpy(char *dest, const char *src, int count);
+
+/**
  * Function: l_log2
  * Integral base-2 logarithm
  */
@@ -157,4 +181,11 @@ int lunlink(const char *name);
  * Cross compiler version of fileno
  */
 int lfileno(FILE *f);
+
+/**
+ * Function: lsleep
+ * Block the current thread for the specified number of seconds
+ */
+void lsleep(int secs);
+
 #endif
