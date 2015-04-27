@@ -47,7 +47,7 @@ lstring *create_lstring_from_file(const char *fname, lerror **error) {
 	l_assert(error==NULL || *error==NULL);
 	l_assert(fname!=NULL);
 	
-	if(fopen_s(&in, fname, "rb")) {
+	if(lfopen_s(&in, fname, "rb")) {
 		lerror_set_sprintf(error, "Can't open file %s", fname);
 		goto end;
 	}
@@ -71,7 +71,7 @@ void write_lstring_to_file(const char *fname, lstring *buffer, lerror **error) {
 	l_assert(buffer!=NULL);
 	l_assert(error==NULL || *error==NULL);
 
-	if(fopen_s(&out, fname, "wb")) {
+	if(lfopen_s(&out, fname, "wb")) {
 		lerror_set_sprintf(error, "IO error writing to %s", fname);
 		return;
 	}
