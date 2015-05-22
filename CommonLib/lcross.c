@@ -78,6 +78,7 @@ int l_strnicmp(const char *s1, const char *s2, int size) {
 
         s1++;
         s2++;
+		i++;
     }
 }
 
