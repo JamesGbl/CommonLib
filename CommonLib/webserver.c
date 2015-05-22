@@ -300,7 +300,7 @@ static int request_handler( struct mg_connection *conn ) {
 
     lstring *buffer = lstring_new();
     buffer = lstring_append_sprintf_f(buffer, "%s %s [%s]", info->request_method, info->uri, info->query_string);
-    l_info(buffer);
+    l_info("%s", buffer);
     lstring_delete(buffer);
 
     l_assert( self!=NULL );
