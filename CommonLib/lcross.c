@@ -194,7 +194,7 @@ int lfileno(FILE *f) {
 void l_strlwr(char *s) {
 #ifdef _WIN32
 	if (s==NULL) return;
-	_strlwr_s(s, strlen(s));
+	_strlwr_s(s, strlen(s)+1);
 #else
         for ( ; *s; ++s) *s = tolower(*s);
 #endif
@@ -203,12 +203,16 @@ void l_strlwr(char *s) {
 void l_strrev(char *s) {
 #ifdef _WIN32
 	_strrev(s);
+#else
+	strrev(s);
 #endif
 }
 
 void l_strncpy(char *dest, const char *src, int count) {
 #ifdef _WIN32
-	strncpy_s(dest, strlen(src), src, count);
+	strncpy_s(dest, count+1, src, count);
+#else
+	strncpy(dest, src, count);
 #endif
 }
 
