@@ -216,6 +216,7 @@ extern "C" {
 	===============================================================================
 	*/
 	int UJObjectUnpack(UJObject objObj, int keys, const char *format, const wchar_t **keyNames, ...);
+	int UJObjectUnpackBetter(UJObject objObj, int keys, const char *format, const wchar_t **keyNames, ...);
 
 	/*
 	===============================================================================
