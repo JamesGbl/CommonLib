@@ -230,6 +230,7 @@ DbPrepared_Sqlite * DbPrepared_Sqlite_alloc( DbConnection *connection, sqlite3 *
 struct DbConnection_Sqlite {
 	DbConnection parent;
 	sqlite3 *db;
+	lbool shared;
 };
 typedef struct DbConnection_Sqlite DbConnection_Sqlite;
 
@@ -242,6 +243,7 @@ DbConnection *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
 	self = (DbConnection_Sqlite *)lmalloc( sizeof(DbConnection_Sqlite) );
 	DbConnection_init( (DbConnection *)self, DbConnection_Sqlite_class() );
 
+	self->shared = LFALSE;
 	rc = sqlite3_open_v2( nomeFile, &self->db, SQLITE_OPEN_URI | SQLITE_OPEN_READWRITE, NULL );
 	if (rc!=SQLITE_OK) {
 		if ( error!=NULL) {
@@ -270,9 +272,23 @@ DbConnection *DbConnection_Sqlite_new_mem( void ) {
 	return DbConnection_Sqlite_new( ":memory:", NULL );
 }
 
+
+DbConnection *DbConnection_Sqlite_new_embed(void *handle)
+{
+    DbConnection_Sqlite *self = lmalloc( sizeof(DbConnection_Sqlite) );
+    DbConnection_init( (DbConnection *)self, DbConnection_Sqlite_class() );
+
+    self->db = handle;
+    self->shared = LTRUE;
+
+    return (DbConnection *)self;
+}
+
 void DbConnection_Sqlite_destroy( DbConnection *parent ) {
 	DbConnection_Sqlite *self = (DbConnection_Sqlite *)parent;
-	sqlite3_close( self->db );
+	if (!self->shared) {
+		sqlite3_close( self->db );
+	}
 }
 
 lbool DbConnection_Sqlite_sql_exec( DbConnection *parent, const char *sql, lerror **error ) {
