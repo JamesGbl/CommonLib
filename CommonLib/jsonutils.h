@@ -34,6 +34,8 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 
 #include "unicodeutils.h"
 #include "lcross.h"
+#include "lstring.h"
+#include "third-party/ujdecode.h"
 
 typedef struct JsonBuffer JsonBuffer;
 
@@ -277,5 +279,39 @@ int JsonBuffer_size( JsonBuffer *self );
  *   self - The buffer
  */
 const char *JsonBuffer_get( JsonBuffer *self );
+
+/**
+ * Function: lstring_new_from_ujobject
+ * Create an lstring from an UJObject
+ * Parameters:
+ *   object - The UJObject to decode
+ */
+lstring *lstring_new_from_ujobject(UJObject object);
+
+/**
+ * Function: lstring_from_ujobject_f
+ * Fill an existing lstring from an ujobject
+ * Parameters:
+ *   result - The existing lstring to fill
+ *   object - The UJObject to decode
+ */
+lstring *lstring_from_ujobject_f(lstring *result, UJObject object);
+
+/**
+ * Function: lstring_from_ujstring_f
+ * Fill an existeng lstring from an ujobject
+ * Parameters:
+ *   result - The existing lstring to fill
+ *   str - The UJString to decode
+ */
+lstring *lstring_from_ujstring_f(lstring *result, UJString str);
+
+/**
+ * Function: Gets the element count of an UJArray
+ * Parameters:
+ *   object - The UJObject containing the array, must be not NULL
+ * Returns: The element count
+ */
+int get_ujarray_element_count(UJObject object);
 
 #endif
