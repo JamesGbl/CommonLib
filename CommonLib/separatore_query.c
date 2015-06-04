@@ -32,109 +32,109 @@ For more information, please refer to <http://unlicense.org/>
 #include <ctype.h>
 
 /**
- * Salta gli spazi in una query
- */
+* Salta gli spazi in una query
+*/
 enum StatoAnalizzatoreCommenti {
-    SAC_NORMALE,
-    SAC_DENTRO_COMMENTO_RIGA,
-    SAC_DENTRO_COMMENTO_TIPO_C,
-    SAC_DENTRO_COMMENTO_TIPO_C_FINISCE
+	SAC_NORMALE,
+	SAC_DENTRO_COMMENTO_RIGA,
+	SAC_DENTRO_COMMENTO_TIPO_C,
+	SAC_DENTRO_COMMENTO_TIPO_C_FINISCE
 };
 
 static const char *saltaSpazi( const char *c ) {
-    enum StatoAnalizzatoreCommenti stato;
-    
-    stato = SAC_NORMALE;
+	enum StatoAnalizzatoreCommenti stato;
 
-    for( stato=SAC_NORMALE; *c; c++ ) {
-	
-	if ( stato==SAC_DENTRO_COMMENTO_RIGA ) {
-	    if ( *c=='\n' ) {
-		stato = SAC_NORMALE;
-	    }
+	stato = SAC_NORMALE;
 
-        } else if ( stato==SAC_DENTRO_COMMENTO_TIPO_C ) {
-            if ( *c=='*' && *(c+1)=='/') {
-                stato = SAC_DENTRO_COMMENTO_TIPO_C_FINISCE;
-            }
+	for( stato=SAC_NORMALE; *c; c++ ) {
 
-        } else if ( stato==SAC_DENTRO_COMMENTO_TIPO_C_FINISCE ) {
-            stato = SAC_NORMALE;
+		if ( stato==SAC_DENTRO_COMMENTO_RIGA ) {
+			if ( *c=='\n' ) {
+				stato = SAC_NORMALE;
+			}
 
-        } else {
-            if ( *c=='-' && *(c+1)=='-' ) {
-                stato = SAC_DENTRO_COMMENTO_RIGA;
+		} else if ( stato==SAC_DENTRO_COMMENTO_TIPO_C ) {
+			if ( *c=='*' && *(c+1)=='/') {
+				stato = SAC_DENTRO_COMMENTO_TIPO_C_FINISCE;
+			}
 
-            } else if ( *c=='/' && *(c+1)=='*') {
+		} else if ( stato==SAC_DENTRO_COMMENTO_TIPO_C_FINISCE ) {
+			stato = SAC_NORMALE;
 
-                stato = SAC_DENTRO_COMMENTO_TIPO_C;
+		} else {
+			if ( *c=='-' && *(c+1)=='-' ) {
+				stato = SAC_DENTRO_COMMENTO_RIGA;
 
-            } else if ( isspace( *c ) ) {
-		/* nop() */
-            } else {
-		break;
-            }
-        }
-    }
+			} else if ( *c=='/' && *(c+1)=='*') {
 
-    return c;
+				stato = SAC_DENTRO_COMMENTO_TIPO_C;
+
+			} else if ( isspace( *c ) ) {
+				/* nop() */
+			} else {
+				break;
+			}
+		}
+	}
+
+	return c;
 }
 
 /**
- * Salta alla prossima istruzione in una query
- */
+* Salta alla prossima istruzione in una query
+*/
 enum StatoAnalizzatoreSql {
-    SAS_STATO_NORMALE,
-    SAS_STATO_STRINGA,
-    SAS_STATO_IDENTIFICATORE
+	SAS_STATO_NORMALE,
+	SAS_STATO_STRINGA,
+	SAS_STATO_IDENTIFICATORE
 };
 
 static const char *saltaProssimaQuery( const char *sql, char terminatore ) {
-    enum StatoAnalizzatoreSql stato;
-    const char *c;
+	enum StatoAnalizzatoreSql stato;
+	const char *c;
 
-    for( stato=SAS_STATO_NORMALE, c=sql; *c; c++ ) {
+	for( stato=SAS_STATO_NORMALE, c=sql; *c; c++ ) {
 
-        if ( stato==SAS_STATO_NORMALE ) {
-            if ( *c==terminatore ) {
-		break;
-            } else if ( *c=='\"' ) {
-                stato = SAS_STATO_IDENTIFICATORE;
-            } else if ( *c=='\'') {
-                stato = SAS_STATO_STRINGA;
-            } else {
-		/* nop() */
-            }
-        } else if ( stato==SAS_STATO_STRINGA ) {
-            if ( *c=='\'' ) {
-                stato = SAS_STATO_NORMALE;
-            } else {
-		/* nop() */
-            }
-        } else if ( stato==SAS_STATO_IDENTIFICATORE ) {
-            if ( *c=='\"' ) {
-                stato = SAS_STATO_NORMALE;
-            } else {
-		/* nop() */
-            }
-        } else {
-            /* mai qua! */
-	    l_assert( 0 );
-	    /* nop(); */
-        }
-    }
+		if ( stato==SAS_STATO_NORMALE ) {
+			if ( *c==terminatore ) {
+				break;
+			} else if ( *c=='\"' ) {
+				stato = SAS_STATO_IDENTIFICATORE;
+			} else if ( *c=='\'') {
+				stato = SAS_STATO_STRINGA;
+			} else {
+				/* nop() */
+			}
+		} else if ( stato==SAS_STATO_STRINGA ) {
+			if ( *c=='\'' ) {
+				stato = SAS_STATO_NORMALE;
+			} else {
+				/* nop() */
+			}
+		} else if ( stato==SAS_STATO_IDENTIFICATORE ) {
+			if ( *c=='\"' ) {
+				stato = SAS_STATO_NORMALE;
+			} else {
+				/* nop() */
+			}
+		} else {
+			/* mai qua! */
+			l_assert( 0 );
+			/* nop(); */
+		}
+	}
 
-    return c;
+	return c;
 }
 
 const char *DB_prossima_query( const char *sql ) {
-    const char *fineQuery;
-    const char *inizio;
+	const char *fineQuery;
+	const char *inizio;
 
-    if ( sql==NULL ) return NULL;
+	if ( sql==NULL ) return NULL;
 
-    inizio = saltaSpazi( sql );
-    fineQuery = saltaProssimaQuery( inizio, ';' );
-    return fineQuery;
+	inizio = saltaSpazi( sql );
+	fineQuery = saltaProssimaQuery( inizio, ';' );
+	return fineQuery;
 }
 
