@@ -284,3 +284,55 @@ void JsonBuffer_writeIntAttribute(JsonBuffer *self, const char *name, int value,
 		JsonBuffer_writeSeparator(self);
 	}
 }
+
+lstring *lstring_new_from_ujobject(UJObject object) {
+	const wchar_t *data;
+	size_t size;
+	char *sBuffer;
+	lstring *result;
+
+	l_assert(object!=NULL);
+	data = UJReadString( object, &size );
+	sBuffer = stringWCharTo1252( data );
+	result = lstring_new_from_cstr(sBuffer);
+	lfree(sBuffer);
+	return result;
+}
+
+lstring *lstring_from_ujobject_f(lstring *result, UJObject object) {
+	const wchar_t *data;
+	size_t size;
+	char *sBuffer;
+
+	l_assert(object!=NULL);
+	data = UJReadString( object, &size );
+	sBuffer = stringWCharTo1252( data );
+
+	lstring_truncate(result, 0);
+	result = lstring_from_cstr_f(result, sBuffer);
+
+	return result;
+}
+
+lstring *lstring_from_ujstring_f(lstring *result, UJString str) {
+	char *sBuffer = stringWCharTo1252( str.ptr );
+	result = lstring_from_cstr_f(result, sBuffer);
+	free(sBuffer);
+	return result;
+}
+
+int get_ujarray_element_count(UJObject object) {
+	void *iter;
+	int result;
+	UJObject element;
+
+	l_assert(object!=NULL);
+	l_assert(UJIsArray(object));
+	
+	result = 0;
+
+	iter = UJBeginArray(object);
+	while(UJIterArray(&iter, &element)) result++;
+	
+	return result;
+}

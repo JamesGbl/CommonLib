@@ -739,6 +739,78 @@ int UJObjectUnpack(UJObject objObj, int keys, const char *format, const wchar_t 
 	return found;
 }
 
+int UJObjectUnpackBetter(UJObject objObj, int keys, const char *format, const wchar_t **_keyNames, ...)
+{
+	void *iter;
+	UJString key;
+	UJObject value;
+	int found = 0;
+	int ki;
+	int ks = 0;
+	const wchar_t *keyNames[64];
+  va_list args;
+  UJObject *outValues[64];
+
+
+  if (!UJIsObject(objObj))
+	{
+		return 0;
+	}
+  
+	iter = UJBeginObject(objObj);
+
+	if (keys > 64)
+	{
+		return -1;
+	}
+
+    va_start(args, _keyNames);
+	for (ki = 0; ki < keys; ki ++)
+	{
+		keyNames[ki] = _keyNames[ki];
+        outValues[ki] = va_arg(args, UJObject *);
+	}
+    va_end(args);
+	
+	while (UJIterObject(&iter, &key, &value))
+	{
+		for (ki = ks; ki < keys; ki ++)
+		{
+			const wchar_t *kn = keyNames[ki];
+
+			if (kn == NULL)
+			{
+				continue;
+			}
+
+			if (wcscmp(key.ptr, kn) != 0)
+			{
+				continue;
+			}
+
+			if (!checkType(ki, format, value))
+			{
+				continue;
+			}
+
+			found ++;
+
+			if (outValues[ki] != NULL)
+			{
+  				*outValues[ki] = value;
+			}
+			keyNames[ki] = NULL;
+
+			if (ki == ks)
+			{
+				ks ++;
+			}
+		}
+	}
+
+	return found;
+}
+
 UJObject UJDecode(const char *input, size_t cbInput, UJHeapFuncs *hf, void **outState)
 {
 	UJObject ret;

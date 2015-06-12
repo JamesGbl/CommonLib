@@ -76,6 +76,18 @@ DbConnection_Sqlite *DbConnection_Sqlite_new_mem( void );
 DbConnection_Sqlite *DbConnection_Sqlite_new_mem_shared(const char *dbname);
 
 /**
+ * Function: DbConnection_Sqlite_new_embed
+ *
+ * Embed an existing sqlite3* connection in this high-lever connection.
+ * The low-level connection will not be destroyed when the high level
+ * connection will be.
+ *
+ * Returns:
+ *     The connection
+ */
+DbConnection_Sqlite *DbConnection_Sqlite_new_embed(void *handle);
+
+/**
  * Function: DbConnection_Sqlite_get_handle
  *
  * Get the internal SQLite handle of this data connection. This function
