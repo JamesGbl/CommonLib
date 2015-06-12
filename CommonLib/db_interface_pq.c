@@ -396,6 +396,11 @@ DbPrepared * DbConnectionPq_sql_prepare( DbConnection *parent, const char *sql, 
 	return (DbPrepared *) crea_prepared_per( parent, self->conn, self->lastPrep, sql, error );
 }
 
+const char *DbConnectionPq_get_type(DbConnection *parent) {
+    l_assert(parent!=NULL);
+    return POSTGRESQL_CONNECTION_TYPE;
+}
+
 DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
 	DbConnection_Pq *self;
 	static DbConnection_class oClass;
@@ -423,6 +428,7 @@ DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
 	oClass.sql_exec = DbConnectionPq_sql_exec;
 	oClass.sql_retrieve = DbConnectionPq_sql_retrieve;
 	oClass.sql_prepare = DbConnectionPq_sql_prepare;
+    oClass.get_type = DbConnectionPq_get_type;
 
 	self = (DbConnection_Pq *)lmalloc( sizeof(struct DbConnection_Pq) );
 	self->conn = conn;

@@ -33,6 +33,8 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #ifndef __DB_INTERFACE_PQ_H
 #define __DB_INTERFACE_PQ_H
 
+#define POSTGRESQL_CONNECTION_TYPE     "postgresql"
+
 /**
  * File: db_interface_pq.h
  */
