@@ -32,6 +32,7 @@ For more information, please refer to <http://unlicense.org/>
 #include "lcross.h"
 #include "third-party/sqlite3.h"
 #include "lmemory.h"
+#include "db_interface_sqlite.h"
 
 DbIterator_class* DbIterator_Sqlite_class();
 DbPrepared_class* DbPrepared_Sqlite_class();
@@ -234,7 +235,7 @@ struct DbConnection_Sqlite {
 };
 typedef struct DbConnection_Sqlite DbConnection_Sqlite;
 
-DbConnection *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
+DbConnection_Sqlite *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
 	DbConnection_Sqlite *self = NULL;
 	int rc;
 
@@ -253,7 +254,7 @@ DbConnection *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
 		self = NULL;
 	}
 
-	return (DbConnection *)self;
+	return self;
 }
 
 DbConnection_Sqlite *DbConnection_Sqlite_new_mem_shared(const char *dbname) {
@@ -268,12 +269,12 @@ DbConnection_Sqlite *DbConnection_Sqlite_new_mem_shared(const char *dbname) {
 	return result;
 }
 
-DbConnection *DbConnection_Sqlite_new_mem( void ) {
+DbConnection_Sqlite *DbConnection_Sqlite_new_mem( void ) {
 	return DbConnection_Sqlite_new( ":memory:", NULL );
 }
 
 
-DbConnection *DbConnection_Sqlite_new_embed(void *handle)
+DbConnection_Sqlite *DbConnection_Sqlite_new_embed(void *handle)
 {
     DbConnection_Sqlite *self = lmalloc( sizeof(DbConnection_Sqlite) );
     DbConnection_init( (DbConnection *)self, DbConnection_Sqlite_class() );
@@ -281,7 +282,7 @@ DbConnection *DbConnection_Sqlite_new_embed(void *handle)
     self->db = handle;
     self->shared = LTRUE;
 
-    return (DbConnection *)self;
+    return self;
 }
 
 void DbConnection_Sqlite_destroy( DbConnection *parent ) {
@@ -360,6 +361,11 @@ DbPrepared *DbConnection_Sqlite_sql_prepare( DbConnection *parent, const char *s
 	return (DbPrepared *)DbPrepared_Sqlite_alloc( parent, self->db, sql, statement );
 }
 
+const char *DbConnection_Sqlite_get_type(DbConnection *parent) {
+    l_assert(parent!=NULL);
+    return DbConnection_get_type(parent);
+}
+
 DbConnection_class *DbConnection_Sqlite_class() {
 	static DbConnection_class oClass;
 
@@ -367,6 +373,7 @@ DbConnection_class *DbConnection_Sqlite_class() {
 	oClass.sql_exec = DbConnection_Sqlite_sql_exec;
 	oClass.sql_prepare = DbConnection_Sqlite_sql_prepare;
 	oClass.sql_retrieve = DbConnection_Sqlite_sql_retrieve;
+    oClass.get_type = DbConnection_Sqlite_get_type;
 
 	return &oClass;
 }

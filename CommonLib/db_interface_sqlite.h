@@ -34,6 +34,8 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 
 #include "db_interface.h"
 
+#define SQLITE_CONNECTION_TYPE "sqlite"
+
 typedef struct DbConnection_Sqlite DbConnection_Sqlite;
 
 /**

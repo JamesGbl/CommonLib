@@ -164,6 +164,11 @@ void DbConnection_init( DbConnection *self, DbConnection_class *oClass ) {
     self->buffer = lstring_new();
 }
 
+const char *DbConnection_get_type(DbConnection *self) {
+    l_assert(self!=NULL);
+    return self->oClass->get_type(self);
+}
+
 void DbConnection_destroy( DbConnection *self ) {
     if ( !self ) return;
 

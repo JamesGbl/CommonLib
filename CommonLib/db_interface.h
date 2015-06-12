@@ -63,6 +63,7 @@ struct DbConnection_class {
     int  (*sql_exec)( DbConnection *self, const char *sql, lerror **error );
     DbIterator* (*sql_retrieve)( DbConnection *self, const char *sql, lerror **error );
     DbPrepared* (*sql_prepare)( DbConnection *self, const char *sql, lerror **error );
+    const char *(*get_type)(DbConnection *self);
 };
 
 void DbConnection_init( DbConnection *self, DbConnection_class *oClass );
@@ -142,6 +143,17 @@ DbPrepared *DbConnection_sql_prepare( DbConnection *self, const char *sql, lerro
  *    string. In other words, the last condition doesn't represent an error.
  */
 const char *DbConnection_sql_into( DbConnection *self, const char *sql, lerror **error );
+
+/**
+ * Function: DbConnection_get_type
+ * This functions returns a string describing the connection type and it's
+ * useful when this abstraction layer isn't enought.
+ * Parameters:
+ *    self - The connection
+ * Returns:
+ *    The connection type
+ */
+const char *DbConnection_get_type(DbConnection *self);
 
 /**
  * Class: DbIterator
