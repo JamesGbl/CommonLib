@@ -101,4 +101,16 @@ int db_compare_datetime( const char *first, const char *second );
  */
 void db_execute_sql_script(DbConnection *conndb, const char *sql_script, lerror **error);
 
+/**
+ * Function: db_check_table_existence
+ * This function checks the table existence by issuing a simple "select 1 from <tab>".
+ * If the table doesn't exists this function will invalidate the current transaction.
+ * Parameters:
+ *     conndb - The connection where to execute the queries
+ *     table_name - The name of the table to check
+ * Returns:
+ *     True if the table exists
+ */
+lbool db_check_table_existence(DbConnection *conndb, const char *table_name);
+
 #endif

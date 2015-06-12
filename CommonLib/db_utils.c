@@ -197,3 +197,28 @@ static lstring* db_append_sql_format_vf( lstring *str, const char *format, va_li
 
 	return str;
 }
+
+lbool db_check_table_existence(DbConnection *conndb, const char *table_name) {
+    lstring *sql;
+    DbIterator *iter;
+    lerror *myError = NULL;
+    lbool result;
+
+    l_assert(conndb!=NULL);
+    l_assert(table_name!=NULL);
+
+    sql = lstring_new();
+    sql = db_put_sql_format_f(sql, "SELECT 1 FROM %k WHERE 1=0", table_name);
+    iter = DbConnection_sql_retrieve(conndb, sql, &myError);
+    if (myError!=NULL) {
+        result = LFALSE;
+        lerror_delete(&myError);
+    } else {
+        result = LTRUE;
+    }
+
+    DbIterator_destroy(iter);
+    lstring_delete(sql);
+
+    return result;
+}
