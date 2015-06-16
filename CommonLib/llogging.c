@@ -1,6 +1,7 @@
 #include "llogging.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 #include "lcross.h"
 #include "lstring.h"
 #ifdef _WIN32
@@ -37,7 +38,7 @@ For more information, please refer to <http://unlicense.org/>
 Author: Leonardo Cecchi <leonardoce@interfree.it>
 */ 
 
-//#define FILE_TRACE
+#define FILE_TRACE
 
 static const char *level_to_string( enum LoggingLevel level ) {
     switch( level ) {
@@ -60,8 +61,12 @@ static const char *level_to_string( enum LoggingLevel level ) {
 
 static void l_internal_log( const char *domain, enum LoggingLevel level, const char *format, va_list args ) {
     char logMessage[2048];
-#ifdef _WIN32
+#if (defined _WIN32) && (defined FILE_TRACE)
 	char exeName[MAX_PATH];
+#endif
+#ifdef FILE_TRACE
+    time_t t;
+    struct tm now;
 #endif
 	FILE *out = NULL;
 
@@ -77,8 +82,15 @@ static void l_internal_log( const char *domain, enum LoggingLevel level, const c
 #ifdef _WIN32
 		GetModuleFileNameA(0, exeName, sizeof(exeName));
 		fputs(exeName, out);
-		fputs(") ", out);
+		fputs( " - ", out );
 #endif
+        /* current timestamp */
+        t = time(0);
+        localtime_s(&now, &t);
+
+        fprintf(out, "%04i-%02i-%02i %02i:%02i:%02i", now.tm_year+1900, now.tm_mon+1, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
+
+		fputs( " ", out );
 		fputs( level_to_string( level ), out );
 		fputs( " - ", out );
 		fputs( logMessage, out );

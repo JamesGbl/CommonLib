@@ -39,8 +39,6 @@ DbConnection_class *DbConnection_logging_class() {
 void DbConnection_logging_destroy(DbConnection *self) {
 	DbConnection_Logging *logging = (DbConnection_Logging *)self;
     if (self==NULL) return;
-    DbConnection_destroy(logging->forwarder);
-    lfree(self);
 }
 
 lbool DbConnection_logging_sql_exec( DbConnection *self, const char *sql, lerror **error ) {
@@ -50,7 +48,7 @@ lbool DbConnection_logging_sql_exec( DbConnection *self, const char *sql, lerror
     l_assert(sql!=NULL);
     l_assert(error==NULL || *error==NULL);
 
-    l_info("DbConnection/Logging sql_exec: %s", sql);
+    l_info("[%s] sql_exec: %s", DbConnection_get_type(self), sql);
 
     return DbConnection_sql_exec(logging->forwarder, sql, error);
 }
@@ -60,14 +58,15 @@ DbPrepared *DbConnection_logging_sql_prepare( DbConnection *self, const char *sq
     l_assert(sql!=NULL);
     l_assert(error==NULL || *error==NULL);
 
-    l_info("DbConnection/Logging sql_prepare: %s", sql);
+    l_info("[%s] sql_prepare: %s", DbConnection_get_type(self), sql);
     
     return DbConnection_sql_prepare(self, sql, error);
 }
 
 const char *DbConnection_logging_get_type(DbConnection *self) {
+    DbConnection_Logging *logging = (DbConnection_Logging *)self;
     l_assert(self!=NULL);
-    return DbConnection_get_type(self);
+    return DbConnection_get_type(logging->forwarder);
 }    
 
 DbIterator* DbConnection_logging_sql_retrieve( DbConnection *self, const char *sql, lerror **error ) {
@@ -77,6 +76,6 @@ DbIterator* DbConnection_logging_sql_retrieve( DbConnection *self, const char *s
     l_assert(sql!=NULL);
     l_assert(error==NULL || *error==NULL);
 
-    l_info("DbConnection/Logging sql_retrieve: %s", sql);
+    l_info("[%s] sql_retrieve: %s", DbConnection_get_type(self), sql);
     return DbConnection_sql_retrieve(logging->forwarder, sql, error);
 }

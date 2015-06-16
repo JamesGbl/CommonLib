@@ -363,7 +363,7 @@ DbPrepared *DbConnection_Sqlite_sql_prepare( DbConnection *parent, const char *s
 
 const char *DbConnection_Sqlite_get_type(DbConnection *parent) {
     l_assert(parent!=NULL);
-    return DbConnection_get_type(parent);
+	return SQLITE_CONNECTION_TYPE;
 }
 
 DbConnection_class *DbConnection_Sqlite_class() {
