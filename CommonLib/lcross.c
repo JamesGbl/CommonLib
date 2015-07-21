@@ -167,6 +167,7 @@ int lfopen_s(FILE **pFile, const char *fileName, const char *mode) {
 	if (fileName==NULL || mode==NULL || pFile==NULL) return 1;
 	f = fopen(fileName, mode);
 	if (f==NULL) {
+		*pFile = NULL;
 		return 1;
 	}
 	*pFile = f;
@@ -201,11 +202,20 @@ void l_strlwr(char *s) {
 #endif
 }
 
-void l_strrev(char *s) {
+void l_strrev(char *str) {
 #ifdef _WIN32
-	_strrev(s);
+	_strrev(str);
 #else
-	strrev(s);
+
+	char *p1, *p2;
+
+	if (! str || ! *str) return;
+	for (p1 = str, p2 = str + strlen(str) - 1; p2 > p1; ++p1, --p2)
+	{
+		*p1 ^= *p2;
+		*p2 ^= *p1;
+		*p1 ^= *p2;
+	}
 #endif
 }
 
@@ -225,3 +235,18 @@ void lsleep(int secs) {
 #endif
 } 
 	
+void l_itoa_s(int value, char *str, int bufferSize, int base) {
+#ifdef _WIN32
+_itoa_s(value, str, bufferSize, base);
+#else
+	snprintf(str, bufferSize, "%i", value);
+#endif    
+}
+
+void llocaltime_s(const time_t *timep, struct tm* result) {
+#ifdef _WIN32
+	localtime_s(result, timep);
+#else
+	localtime_r(timep, result);
+#endif
+}

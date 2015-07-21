@@ -33,6 +33,7 @@ For more information, please refer to <http://unlicense.org/>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <time.h>
 
 typedef int lbool;
 #define LFALSE (0)
@@ -119,6 +120,12 @@ uint16_t l_log2(uint32_t n);
  */
 int l_atoi(const char *s);
 
+/**
+ * Function: l_itoa_s
+ * Cross compiler version of the itoa function
+ */
+void l_itoa_s(int value, char *str, int bufferSize, int base);
+
 #ifdef _WIN32
 /**
  * Function: l_current_time_millis
@@ -187,5 +194,12 @@ int lfileno(FILE *f);
  * Block the current thread for the specified number of seconds
  */
 void lsleep(int secs);
+
+/**
+ * Function: llocaltime_s
+ * This is a cross-platform implementation of the localtime
+ * call.
+ */
+void llocaltime_s(const time_t *timep, struct tm* result);
 
 #endif
