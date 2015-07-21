@@ -39,6 +39,9 @@ Author: Leonardo Cecchi <leonardoce@interfree.it>
 #include <stdio.h>
 #ifdef _WIN32
 #include <Windows.h>
+#else
+#include <sys/time.h>
+#include <unistd.h>
 #endif
 
 int l_stricmp( const char *s1, const char *s2 ) {
