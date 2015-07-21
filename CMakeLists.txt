@@ -11,10 +11,13 @@ find_package(PkgConfig)
 if (PKG_CONFIG_FOUND)
    pkg_check_modules(SYSTEMD "systemd" REQUIRED)
    include_directories(SYSTEMD_INCLUDE_DIR)
+
 endif (PKG_CONFIG_FOUND)
 
-add_executable(echo_server Examples/echo_server.c)
-target_link_libraries(echo_server CommonLib systemd)
+if (SYSTEMD_FOUND)
+	add_executable(echo_server Examples/echo_server.c)
+	target_link_libraries(echo_server CommonLib systemd)
+endif()
 
 add_executable(echo_client Examples/echo_client.c)
 target_link_libraries(echo_client CommonLib)
