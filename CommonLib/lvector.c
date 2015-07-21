@@ -28,7 +28,7 @@ For more information, please refer to <http://unlicense.org/>
 */ 
 /* vim: set ai shiftwidth=2 tabstop=2 expandtab: */
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "lvector.h"
 #include "lcross.h"

@@ -35,7 +35,6 @@ www.github.com/esnme/ultrajson
 #include "ujdecode.h"
 #include "ultrajson.h"
 #include <math.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include <stdarg.h>
 
