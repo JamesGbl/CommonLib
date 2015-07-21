@@ -233,7 +233,6 @@ struct DbConnection_Sqlite {
 	sqlite3 *db;
 	lbool shared;
 };
-typedef struct DbConnection_Sqlite DbConnection_Sqlite;
 
 DbConnection_Sqlite *DbConnection_Sqlite_new( const char *nomeFile, lerror **error ) {
 	DbConnection_Sqlite *self = NULL;

@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include "lcross.h"
 #include "lmemory.h"
-#include <libpq-fe.h>
+#include "pq_surrogate.h"
 
 /**
  * Iteratore
@@ -202,7 +202,7 @@ static void DbPreparedPq_metti_parametro_intero( DbPrepared* parent, int n, int 
 	char buffer[60];
 	DbPrepared_Pq *self = (DbPrepared_Pq *)parent;
 	if ( n<0 || n>=self->quantiParametri ) return;
-	sprintf( buffer, "%d", valore );
+	l_itoa_s(valore, buffer, 60, 10);
 	slist_set( self->parametri, n, buffer );
 	self->flagNulli[n] = 0;
 }
@@ -210,7 +210,7 @@ static void DbPreparedPq_metti_parametro_intero( DbPrepared* parent, int n, int 
 static lbool DbPreparedPq_sql_exec( DbPrepared *parent, lerror **error ) {
 	DbPrepared_Pq *self = (DbPrepared_Pq *)parent;
 	PGresult *res;
-	const char **valori;
+	char **valori;
 	int i;
 	lbool result = LFALSE;
 
@@ -222,12 +222,12 @@ static lbool DbPreparedPq_sql_exec( DbPrepared *parent, lerror **error ) {
 		if ( self->flagNulli[i] ) {
 			valori[i] = NULL;
 		} else {
-			valori[i] = slist_at( self->parametri, i );
+			valori[i] = (char *)slist_at( self->parametri, i );
 		}
 	}
 
 	res = PQexecPrepared( self->conn, self->prepName,
-			      self->quantiParametri, valori, NULL, NULL, 0 );
+			      self->quantiParametri, (const char * const *)valori, NULL, NULL, -1 );
 
 	if ( PQresultStatus(res)!=PGRES_COMMAND_OK && PQresultStatus(res)!=PGRES_TUPLES_OK ) {
 		lerror_set( error, PQresultErrorMessage(res) );
@@ -246,7 +246,7 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
 	DbPrepared_Pq *self = (DbPrepared_Pq *)parent;
 	DbIterator *result = NULL;
 	PGresult *res;
-	const char **valori;
+	char **valori;
 	int i;
 
 	valori = calloc(sizeof(char *), self->quantiParametri );
@@ -255,12 +255,12 @@ DbIterator* DbPreparedPq_sql_retrieve( DbPrepared *parent, lerror **error ) {
 		if ( self->flagNulli[i] ) {
 			valori[i] = NULL;
 		} else {
-			valori[i] = slist_at( self->parametri, i );
+			valori[i] = (char *)slist_at( self->parametri, i );
 		}
 	}
 
 	res = PQexecPrepared( self->conn, self->prepName,
-			      self->quantiParametri, valori, NULL, NULL, 0 );
+			      self->quantiParametri, (const char * const *)valori, NULL, NULL, 0 );
 
 	if ( PQresultStatus(res)!=PGRES_COMMAND_OK && PQresultStatus(res)!=PGRES_TUPLES_OK ) {
 		lerror_set( error, PQresultErrorMessage(res) );
@@ -402,9 +402,13 @@ const char *DbConnectionPq_get_type(DbConnection *parent) {
 }
 
 DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
+    lerror *myError = NULL;
 	DbConnection_Pq *self;
 	static DbConnection_class oClass;
 	PGconn *conn;
+
+    pqsurrogate_init(&myError);
+    if (lerror_propagate(error, myError)) return NULL;
 
 	if ( connString==NULL ) {
 		lerror_set( error, "Connessione a PostgreSQL: stringa di connessione nulla?" );
@@ -418,7 +422,7 @@ DbConnection *DbConnection_Pq_new( const char *connString, lerror **error ) {
 	}
 
 	if ( PQstatus(conn) != CONNECTION_OK ) {
-		lerror_set( error, PQerrorMessage(conn) );
+		lerror_set_sprintf( error, "Connection error: %s", PQerrorMessage(conn) );
 		PQfinish( conn );
 		return NULL;
 	}
