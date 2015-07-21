@@ -31,6 +31,8 @@ Author: Leonardo Cecchi <mailto:leonardoce@interfree.it>
 #ifndef __REFCOUNT_H
 #define __REFCOUNT_H
 
+#include <stdlib.h>
+
 /**
  * Type: destructor_t
  * This type is respected by destructor functions
@@ -48,7 +50,7 @@ typedef void (*destructor_t)(void *object);
  *   A reference counted memory space with the reference
  *   count initialized at 1.
  */
-void *rc_malloc(int size, destructor_t destructor);
+void *rc_malloc(size_t size, destructor_t destructor);
 
 /**
  * Function: rc_ref
